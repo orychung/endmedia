@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "endfw": "github:orychung/endfw"
+  }
+}

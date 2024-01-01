@@ -6,14 +6,13 @@ const PROJECT = 'endmedia';
 const rootPath = path.resolve()+'/..';
 
 globalThis.endfw = require('endfw');
-globalThis.endmedia = require('endmedia');
+// globalThis.endmedia = require('endmedia');
 
 const {g} = endfw.global;
 const {Server, basicParseRoute} = endfw.server;
 const Subroute = endfw.subroute;
-g.tokens = require(`${rootPath}/.local/tokens.json`);
 g.serviceConfig = require(`${rootPath}/.local/${PROJECT}/service.json`);
-g.assetConfig = require(`${rootPath}/nodejs/proj/quick/assetConfig.json`);
+g.assetConfig = require(`${rootPath}/nodejs/quick/assetConfig.json`);
 g.assetConfig.authFree.versionPattern = new RegExp(g.assetConfig.versionPattern);
 
 Server.defaultCspDirectives = g.assetConfig.defaultCspDirectives;
@@ -22,7 +21,7 @@ g.server = new Server({
   domain: g.serviceConfig.server.domain,
   port: g.serviceConfig.server.port
 });
-g.server.fileInventories.default.paths = ['./web'];
+g.server.fileInventories.default.paths = [`${rootPath}/nodejs/node_modules/endmedia`];
 g.server.fileInventories.asset = { paths: ['./asset'] };
 g.server.logTypes = {
   "0": {"format":"[T:h:m:s.:ms]"}, //general request
@@ -39,8 +38,6 @@ mainRoute.use(endfw.ingest.logRequest.ip_method_url);
 mainRoute.all('/web/css/*', endfw.lessCss(g.server, req=>req.parsedUrl.remainingPath()));
 mainRoute.all('/file/*', new endfw.file.FileSegment({
   basePath: 'C:',
-  token: g.tokens.fileAPI,
-  tokenExp: (req=>req.headers['file-api-token']),
   regExp:　'.*',
 }).handler);
 mainRoute.use(endfw.ingest.authFree.cache_path_inventory(g.assetConfig.authFree));
@@ -49,23 +46,19 @@ mainRoute.use((req, res, next)=>{
   
   let ret = res.returner;
   let url = req.parsedUrl;
+  if (url.seg(0) != 'web') return ret.jsonMsg.methodNotFound();
+  url.contextDepth++;
   
-         if (url.seg(0) == 'favicon.ico') {ret.file('/img/a_1.png', 'image/png');
-  } else if (url.seg(0) == 'dl'         ) {ret.download(url.pathname);
-  } else if (url.seg(0) == 'demo'       ) {ret.file(url.pathname, undefined, req.p.standalone);
-  } else if (url.seg(0) == 'html'       ) {
-      ret.fillVariable('buildHash', 1);
-      ret.setCsp();
-      ret.file(url.pathname, 'text/html', req.p.standalone);
-  } else if (url.seg(0) == 'room'       ) {roomAPI(req, ret, url);
-  } else if (url.seg(0) == 'system'     ) {systemAPI(req, ret, url);
-  } else if (url.seg(0) == 'user'       ) {userAPI(req, ret, url);
-  } else if (url.seg(0) == 'proxy'      ) {proxyAPI(req, ret, url);
-  } else if (url.seg(0) == 'debug'      ) {debugAPI(req, ret, url);
-  } else {ret.jsonMsg.methodNotFound();
+  if (url.remainingPath == 'favicon.ico') {
+    ret.file('/favicon.png', 'image/png');
+  } else if (url.seg(1) == 'html'       ) {
+    ret.fillVariable('buildHash', 1);
+    ret.setCsp();
+    ret.file(url.remainingPath, 'text/html');
+  } else {
+    ret.file(url.remainingPath);
   }
-}, 'routeRequest');
-g.server.mainRoute = mainRoute;
+});
 
 g.server.app.use(mainRoute.handler);
 // middleware = function that takes 4 parameters identifies an error handler, calling next() with argument means to handle an error

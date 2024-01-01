@@ -5,7 +5,7 @@
       "web": [7, "/web", "default"]
     },
     "resourceMap": {
-      "asset": [0, "/asset", "default"]
+      "asset": [0, "", "default"]
     }
   },
   "defaultCspDirectives": {

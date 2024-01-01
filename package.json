@@ -3,11 +3,12 @@
   "files": [
     "LICENSE",
     "index.js",
-    "library/"
+    "library/",
+    "web/"
   ],
   "scripts": {},
   "dependencies": {
-    "endfw": "^0.4.0",
+    "endfw": "^0.4.0"
   },
   "devDependencies": {},
   "name": "endmedia",
