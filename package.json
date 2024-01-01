@@ -8,7 +8,7 @@
   ],
   "scripts": {},
   "dependencies": {
-    "endfw": "github:orychung/endfw^0.4.0"
+    "endfw": "github:orychung/endfw"
   },
   "devDependencies": {},
   "name": "endmedia",
