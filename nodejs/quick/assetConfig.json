@@ -1,0 +1,27 @@
+{
+  "versionPattern": "[0-9]+",
+  "authFree": {
+    "versionedResourceMap": {
+      "web": [7, "/web", "default"]
+    },
+    "resourceMap": {
+      "asset": [0, "/asset", "default"]
+    }
+  },
+  "defaultCspDirectives": {
+    "connectSrc": [
+      "'self'",
+      "https://cdn.jsdelivr.net"],
+    "scriptSrc": [
+      "'self'", "'unsafe-inline'", "'unsafe-eval'",
+      "https://cdn.jsdelivr.net"],
+    "styleSrc": [
+      "'self'", "'unsafe-inline'",
+      "https://cdnjs.cloudflare.com",
+      "https://www.gstatic.com"],
+    "fontSrc": ["'self'", "https://cdnjs.cloudflare.com"],
+    "imgSrc": [
+      "'self'", "blob:", "data:"],
+    "defaultSrc": ["'self'"]
+  }
+}

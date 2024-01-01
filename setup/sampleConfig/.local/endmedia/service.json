@@ -1,0 +1,13 @@
+{
+  "server": {
+    "domain": "<your domain, e.g. 127.0.0.1>",
+    "port": 8101
+  },
+  "https": {
+    "keyPath": "../.local/ssl/key.pem",
+    "certPath": "../.local/ssl/cert.pem"
+  },
+  "data": {
+    "path": "<root path of data, e.g. C:/Users/ABC/AppData/Roaming/endmedia>"
+  }
+}

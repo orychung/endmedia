@@ -1,0 +1,34 @@
+{
+  "main": "index.js",
+  "files": [
+    "LICENSE",
+    "index.js",
+    "library/"
+  ],
+  "scripts": {},
+  "dependencies": {
+    "endfw": "^0.4.0",
+  },
+  "devDependencies": {},
+  "name": "endmedia",
+  "version": "0.1.0",
+  "description": "Home Media Library based on endfw",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orychung/endmedia.git"
+  },
+  "keywords": [
+    "endfw",
+    "media",
+    "library"
+  ],
+  "author": "COY",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/orychung/endmedia/issues"
+  },
+  "homepage": "https://github.com/orychung/endmedia#readme"
+}
