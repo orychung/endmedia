@@ -6,7 +6,7 @@ const PROJECT = 'endmedia';
 const rootPath = path.resolve()+'/..';
 
 globalThis.endfw = require('endfw');
-// globalThis.endmedia = require('endmedia');
+globalThis.endmedia = require('endmedia');
 
 const {g} = endfw.global;
 const {Server, basicParseRoute} = endfw.server;
