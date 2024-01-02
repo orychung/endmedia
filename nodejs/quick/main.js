@@ -5,8 +5,9 @@ const path = require('path');
 const PROJECT = 'endmedia';
 const rootPath = path.resolve()+'/..';
 
-globalThis.endfw = require('endfw');
-globalThis.endmedia = require('endmedia');
+let endfw = require('endfw');
+//let endmedia = require('endmedia');
+let endmedia = require(rootPath);
 
 const {g} = endfw.global;
 const {Server, basicParseRoute} = endfw.server;
@@ -21,7 +22,8 @@ g.server = new Server({
   domain: g.serviceConfig.server.domain,
   port: g.serviceConfig.server.port
 });
-g.server.fileInventories.default.paths = [`${rootPath}/nodejs/node_modules/endmedia`];
+//g.server.fileInventories.default.paths = [`${rootPath}/nodejs/node_modules/endmedia`];
+g.server.fileInventories.default.paths = [`${rootPath}`];
 g.server.fileInventories.asset = { paths: ['./asset'] };
 g.server.logTypes = {
   "0": {"format":"[T:h:m:s.:ms]"}, //general request
@@ -35,12 +37,10 @@ let mainRoute = new Subroute();
 mainRoute.use(basicParseRoute, 'basicParseRoute');
 mainRoute.use(endfw.ingest.ingestRequest.parsedUrl_p(g.server));
 mainRoute.use(endfw.ingest.logRequest.ip_method_url);
-mainRoute.all('/web/css/*', endfw.lessCss(g.server, req=>req.parsedUrl.remainingPath()));
-mainRoute.all('/file/*', new endfw.file.FileSegment({
-  basePath: 'C:',
-  regExp:　'.*',
-}).handler);
 mainRoute.use(endfw.ingest.authFree.cache_path_inventory(g.assetConfig.authFree));
+mainRoute.all('/automate/*', endmedia.automate.automateAPI);
+mainRoute.all('/metadata/*', endmedia.metadata.metadataAPI);
+mainRoute.all('/web/css/*', endfw.lessCss(g.server, req=>req.parsedUrl.remainingPath()));
 mainRoute.use((req, res, next)=>{
   if (req.method=='POST') g.server.log(JSON.stringify(req.body)); // activate this line for debug only
   
@@ -62,8 +62,8 @@ mainRoute.use((req, res, next)=>{
 
 g.server.app.use(mainRoute.handler);
 // middleware = function that takes 4 parameters identifies an error handler, calling next() with argument means to handle an error
-g.server.app.use(function (err, req, res, next) {
-  console.error(err.stack);
+g.server.app.use(function (e, req, res, next) {
+  console.error(e);
   res.status(400).send('other errors');
 });
 g.server.startHTTPS(g.serviceConfig.https);

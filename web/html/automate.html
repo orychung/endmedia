@@ -1,11 +1,43 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <title>Automate Our Media Library</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4/vue/control.css" />
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4/lib/jquery.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4/lib/vue.global.prod.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4/common/builtin.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4/common/global.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4/client/music.js" charset="utf-8"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4/client/shortcuts.js"></script>
+<script type="text/javascript" id="main">
 
+async function initPage() {
+  g.ui = new VueData({
+    themeFaceHue: 120,
+  });
+  globalThis.all = g;
+  
+  await vueAddOn.loadTemplateURLs('https://cdn.jsdelivr.net/gh/orychung/endfw@0.4/vue/control.xml');
+  vueAddOn.templates = vueAddOn.templates.concat(Array.from($('vueTemplate')));
+  vueAddOn.mountGeneralApp('#screen');
+}
+
+</script>
 </head>
-
+<vueTemplates>
+</vueTemplates>
 <body onload="initPage()">
+<div id="screen" class="flex-row flex-stretch full-size">
+  <flex-layout class="col vscroll tool">
+  </flex-layout>
+  <flex-layout class="col vscroll flex-remain">
+  </flex-layout>
+  <screen-layer style="--base-z-index:20;">
+    <t-cover :all="all"></t-cover>
+    <t-contextmenu :all="all" :w="all.ui.contextmenus"></t-contextmenu>
+  </screen-layer>
+</div>
 </body>
 </html>
