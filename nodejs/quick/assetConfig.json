@@ -2,7 +2,7 @@
   "versionPattern": "[0-9]+",
   "authFree": {
     "versionedResourceMap": {
-      "web": [7, "/web", "default"]
+      "web/html.js": [7, "/web/html.js", "default"]
     },
     "resourceMap": {
       "asset": [0, "", "asset"]
@@ -17,6 +17,7 @@
       "https://cdn.jsdelivr.net"],
     "styleSrc": [
       "'self'", "'unsafe-inline'",
+      "https://cdn.jsdelivr.net",
       "https://cdnjs.cloudflare.com",
       "https://www.gstatic.com"],
     "fontSrc": ["'self'", "https://cdnjs.cloudflare.com"],

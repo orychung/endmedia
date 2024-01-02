@@ -6,8 +6,7 @@ const PROJECT = 'endmedia';
 const rootPath = path.resolve()+'/..';
 
 let endfw = require('endfw');
-//let endmedia = require('endmedia');
-let endmedia = require(rootPath);
+let endmedia = require('endmedia');
 
 const {g} = endfw.global;
 const {Server, basicParseRoute} = endfw.server;
@@ -23,7 +22,7 @@ g.server = new Server({
   port: g.serviceConfig.server.port
 });
 //g.server.fileInventories.default.paths = [`${rootPath}/nodejs/node_modules/endmedia`];
-g.server.fileInventories.default.paths = [`${rootPath}`];
+g.server.fileInventories.default.paths = [`${rootPath}`]; //special case working for dev or direct deployment
 g.server.fileInventories.asset = { paths: ['./asset'] };
 g.server.logTypes = {
   "0": {"format":"[T:h:m:s.:ms]"}, //general request
@@ -40,23 +39,21 @@ mainRoute.use(endfw.ingest.logRequest.ip_method_url);
 mainRoute.use(endfw.ingest.authFree.cache_path_inventory(g.assetConfig.authFree));
 mainRoute.all('/automate/*', endmedia.automate.automateAPI);
 mainRoute.all('/metadata/*', endmedia.metadata.metadataAPI);
+endfw.lessCss.contextPath = '/web/css';
 mainRoute.all('/web/css/*', endfw.lessCss(g.server, req=>req.parsedUrl.remainingPath()));
 mainRoute.use((req, res, next)=>{
   if (req.method=='POST') g.server.log(JSON.stringify(req.body)); // activate this line for debug only
   
   let ret = res.returner;
   let url = req.parsedUrl;
+  if (url.seg(0) == 'favicon.ico') return ret.file('/favicon.png', 'image/png');
   if (url.seg(0) != 'web') return ret.jsonMsg.methodNotFound();
-  url.contextDepth++;
-  
-  if (url.remainingPath == 'favicon.ico') {
-    ret.file('/favicon.png', 'image/png');
-  } else if (url.seg(1) == 'html'       ) {
+  if (url.seg(1) == 'html') {
     ret.fillVariable('buildHash', 1);
     ret.setCsp();
-    ret.file(url.remainingPath, 'text/html');
+    ret.file(url.remainingPath(), 'text/html');
   } else {
-    ret.file(url.remainingPath);
+    ret.file(url.remainingPath());
   }
 });
 

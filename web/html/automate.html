@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-<title>Automate Our Media Library</title>
+<title>Automate</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4/vue/control.css" />
@@ -14,9 +14,9 @@
 <script type="text/javascript" id="main">
 
 async function initPage() {
-  g.ui = new VueData({
+  g.ui = {
     themeFaceHue: 120,
-  });
+  };
   globalThis.all = g;
   
   await vueAddOn.loadTemplateURLs('https://cdn.jsdelivr.net/gh/orychung/endfw@0.4/vue/control.xml');
