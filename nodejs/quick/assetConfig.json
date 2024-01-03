@@ -2,7 +2,8 @@
   "versionPattern": "[0-9]+",
   "authFree": {
     "versionedResourceMap": {
-      "web/html.js": [7, "/web/html.js", "default"]
+      "web/html.js": [0, "/web/html.js", "default"],
+      "endfw": [0, "/../endfw", "default"]
     },
     "resourceMap": {
       "asset": [0, "", "asset"]
