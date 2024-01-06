@@ -25,6 +25,12 @@ async function initPage() {
   Vue.endAddOn.createApp({
     mountSelectors: ['#screen'],
   });
+  
+  basicTest();
+}
+
+async function basicTest() {
+  console.log('listLibrary', await http.get('/metadata/listLibrary'));
 }
 
 </script>

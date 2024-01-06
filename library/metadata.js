@@ -9,7 +9,7 @@ function metadataAPI(req, res, next) {
   const url = req.parsedUrl;
   
   if (url.seg(1) == 'listLibrary') {
-    ret.json(libraryPaths);
+    ret.json(g.serviceConfig.data.libraryPaths);
   } else {return ret.jsonMsg.methodNotFound();
   }
 };
