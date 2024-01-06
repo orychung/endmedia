@@ -4,26 +4,21 @@ const path = require('path');
 const endfw = require('endfw');
 
 const PROJECT = 'endmedia';
-const rootPath = path.resolve()+'/..';
-g.rootPath = rootPath;
-
-//let endmedia = require('endmedia');
-let endmedia = require(rootPath);
-
-const {Server, basicParseRoute} = endfw.server;
-const Subroute = endfw.subroute;
-g.serviceConfig = require(`${rootPath}/.local/${PROJECT}/service.json`);
-g.assetConfig = require(`${rootPath}/nodejs/quick/assetConfig.json`);
+g.rootPath = path.resolve()+'/..';
+g.serviceConfig = require(`${g.rootPath}/.local/${PROJECT}/service.json`);
+g.assetConfig = require(`${g.rootPath}/nodejs/quick/assetConfig.json`);
 g.assetConfig.authFree.versionPattern = new RegExp(g.assetConfig.versionPattern);
 
-Server.defaultCspDirectives = g.assetConfig.defaultCspDirectives;
-g.server = new Server({
+let endmedia = require('endmedia');
+
+g.server = new endfw.server.Server({
   project: PROJECT,
+  cspDirectives: g.assetConfig.cspDirectives,
   domain: g.serviceConfig.server.domain,
   port: g.serviceConfig.server.port
 });
-//g.server.fileInventories.default.paths = [`${rootPath}/nodejs/node_modules/endmedia`];
-g.server.fileInventories.default.paths = [`${rootPath}`]; //special case working for dev or direct deployment
+//g.server.fileInventories.default.paths = [`${g.rootPath}/nodejs/node_modules/endmedia`];
+g.server.fileInventories.default.paths = [`${g.rootPath}`]; //special case working for dev or direct deployment
 g.server.fileInventories.asset = { paths: ['./asset'] };
 g.server.logTypes = {
   "0": {"format":"[T:h:m:s.:ms]"}, //general request
@@ -33,15 +28,17 @@ g.server.log = function(message, type=0) {
   console.log(endfw.text.now.format(this.logTypes[type].format) + message);
 };
 
-let mainRoute = new Subroute();
-mainRoute.use(basicParseRoute, 'basicParseRoute');
+let mainRoute = new endfw.subroute();
+mainRoute.use(endfw.server.basicParseRoute, 'basicParseRoute');
 mainRoute.use(endfw.ingest.ingestRequest.parsedUrl_p(g.server));
 mainRoute.use(endfw.ingest.logRequest.ip_method_url);
 mainRoute.use(endfw.ingest.authFree.cache_path_inventory(g.assetConfig.authFree));
 mainRoute.all('/automate/*', endmedia.automate.automateAPI);
 mainRoute.all('/metadata/*', endmedia.metadata.metadataAPI);
-endfw.lessCss.contextPath = '/web/css';
-mainRoute.all('/web/css/*', endfw.lessCss(g.server, req=>req.parsedUrl.remainingPath()));
+mainRoute.all('/web/css/*', endfw.lessCss({
+  contextPath: '/web/css',
+  pathFromReq: req=>req.parsedUrl.remainingPath(),
+}));
 mainRoute.use((req, res, next)=>{
   if (req.method=='POST') g.server.log(JSON.stringify(req.body)); // activate this line for debug only
   

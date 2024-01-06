@@ -9,7 +9,7 @@
       "asset": [0, "", "asset"]
     }
   },
-  "defaultCspDirectives": {
+  "cspDirectives": {
     "connectSrc": [
       "'self'",
       "https://cdn.jsdelivr.net"],

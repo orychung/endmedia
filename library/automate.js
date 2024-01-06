@@ -2,8 +2,11 @@
 
 let endfw = require('endfw'); //g is defined here
 
-let dataConfig = g.serviceConfig.path;
+let dataPath = g.serviceConfig.path;
+let libraryPaths = g.serviceConfig.libraryPaths;
 function automateAPI(req, res, next) {
+  const ret = res.returner;
+  const url = req.parsedUrl;
   
 };
 
