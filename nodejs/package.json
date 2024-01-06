@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "endfw": "github:orychung/endfw",
+    "endfw": "github:orychung/endfw#dev",
     "endmedia": "github:orychung/endmedia#dev"
   }
 }

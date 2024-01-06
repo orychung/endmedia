@@ -1,7 +1,6 @@
 "use strict";
 
-let endfw = require('endfw');
-const {g} = endfw.global;
+let endfw = require('endfw'); //g is defined here
 
 let dataConfig = g.serviceConfig.path;
 function metadataAPI(req, res, next) {

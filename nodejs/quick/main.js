@@ -1,14 +1,15 @@
 "use strict";
 //main.js for node.js server start
 const path = require('path');
+const endfw = require('endfw');
 
 const PROJECT = 'endmedia';
 const rootPath = path.resolve()+'/..';
+g.rootPath = rootPath;
 
-let endfw = require('endfw');
-let endmedia = require('endmedia');
+//let endmedia = require('endmedia');
+let endmedia = require(rootPath);
 
-const {g} = endfw.global;
 const {Server, basicParseRoute} = endfw.server;
 const Subroute = endfw.subroute;
 g.serviceConfig = require(`${rootPath}/.local/${PROJECT}/service.json`);
