@@ -19,18 +19,22 @@ async function initPage() {
     themeFaceHue: 120,
   };
   globalThis.all = g;
-  
+
   await Vue.endAddOn.loadTemplateURLs('https://cdn.jsdelivr.net/gh/orychung/endfw@0.4/vue/control.xml');
   Vue.endAddOn.templates = Vue.endAddOn.templates.concat(Array.from($('vueTemplate')));
   Vue.endAddOn.createApp({
     mountSelectors: ['#screen'],
   });
-  
+
   basicTest();
 }
 
 async function basicTest() {
   console.log('listLibrary', await http.get('/metadata/listLibrary'));
+  console.log('readFile', await http.post('/mediaFile/readFile', {
+    libraryPath: 'D:/Songs/Anime',
+    path: '/[m3u]/2-years.m3u8',
+  }));
 }
 
 </script>

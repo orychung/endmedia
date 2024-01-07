@@ -13,7 +13,7 @@ g.serviceConfig.data.libraryPaths.forEach(path=>{
 mediaRoute.all(
   '/mediaFile/*',
   (req, res, next)=>{
-    handler = pathHandler[req.p.libraryPath];
+    const handler = pathHandler[req.p.libraryPath];
     if (!handler) return endfw.file.FileSegment.errorCallback(res, undefined, 404, "libraryPath not found");
     return handler(req, res, next);
   }
