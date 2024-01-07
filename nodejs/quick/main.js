@@ -33,8 +33,7 @@ mainRoute.use(endfw.server.basicParseRoute, 'basicParseRoute');
 mainRoute.use(endfw.ingest.ingestRequest.parsedUrl_p(g.server));
 mainRoute.use(endfw.ingest.logRequest.ip_method_url);
 mainRoute.use(endfw.ingest.authFree.cache_path_inventory(g.assetConfig.authFree));
-mainRoute.all('/automate/*', endmedia.automate.automateAPI, 'automate');
-mainRoute.all('/metadata/*', endmedia.metadata.metadataAPI, 'metadata');
+mainRoute.use(endmedia.mediaRoute);
 mainRoute.all('/web/css/*', endfw.lessCss({
   contextPath: '/web/css',
   pathFromReq: req=>req.parsedUrl.remainingPath(),
