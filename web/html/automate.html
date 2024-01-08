@@ -33,7 +33,7 @@ async function basicTest() {
   console.log('listLibrary', await http.get('/metadata/listLibrary'));
   console.log('readFile', await http.post('/mediaFile/readFile', {
     libraryPath: 'D:/Songs/Anime',
-    path: '/[m3u]/2-years.m3u8',
+    path: './[m3u]/2-years.m3u8',
   }));
 }
 

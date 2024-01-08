@@ -1,15 +1,12 @@
 "use strict";
 
-let endfw = require('endfw'); //g is defined here
-
-let dataPath = g.serviceConfig.data.path;
-let libraryPaths = g.serviceConfig.data.libraryPaths;
 function metadataAPI(req, res, next) {
+  const configData = g.serviceConfig.data;
   const ret = res.returner;
   const url = req.parsedUrl;
   
   if (url.seg(1) == 'listLibrary') {
-    ret.json(g.serviceConfig.data.libraryPaths);
+    ret.json(configData.libraryPaths);
   } else {return ret.jsonMsg.methodNotFound();
   }
 };

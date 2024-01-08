@@ -19,6 +19,7 @@ globalThis.loadDynamic = function loadDynamic() {
   if (ingestAPI) endmedia.mediaRoute.use(ingestAPI, 'ingest');
   if (automateAPI) endmedia.mediaRoute.all('/automate/*', automateAPI, 'automate');
   if (metadataAPI) endmedia.mediaRoute.all('/metadata/*', metadataAPI, 'metadata');
+  console.log(endmedia.mediaRoute.middlewares);
 }
 
 let endmedia = require('endmedia');
