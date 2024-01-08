@@ -9,6 +9,18 @@ g.serviceConfig = require(`${g.rootPath}/.local/${PROJECT}/service.json`);
 g.assetConfig = require(`${g.rootPath}/nodejs/quick/assetConfig.json`);
 g.assetConfig.authFree.versionPattern = new RegExp(g.assetConfig.versionPattern);
 
+const dynamicLib = endfw.dynamic.dynamicLibFor('./quick');
+globalThis.loadDynamic = function loadDynamic() {
+  let {
+    ingestAPI,
+    automateAPI,
+    metadataAPI,
+  } = dynamicLib('/dev');
+  if (ingestAPI) endmedia.mediaRoute.use(ingestAPI, 'ingest');
+  if (automateAPI) endmedia.mediaRoute.all('/automate/*', automateAPI, 'automate');
+  if (metadataAPI) endmedia.mediaRoute.all('/metadata/*', metadataAPI, 'metadata');
+}
+
 let endmedia = require('endmedia');
 
 g.server = new endfw.server.Server({
@@ -33,7 +45,7 @@ mainRoute.use(endfw.server.basicParseRoute, 'basicParseRoute');
 mainRoute.use(endfw.ingest.ingestRequest.parsedUrl_p(g.server));
 mainRoute.use(endfw.ingest.logRequest.ip_method_url);
 mainRoute.use(endfw.ingest.authFree.cache_path_inventory(g.assetConfig.authFree));
-mainRoute.use(endmedia.mediaRoute);
+mainRoute.use(endmedia.mediaRoute, 'mediaRoute');
 mainRoute.all('/web/css/*', endfw.lessCss({
   contextPath: '/web/css',
   pathFromReq: req=>req.parsedUrl.remainingPath(),
@@ -53,6 +65,7 @@ mainRoute.use((req, res, next)=>{
     ret.file(url.remainingPath());
   }
 });
+globalThis.loadDynamic();
 
 g.server.app.use(mainRoute.handler);
 // middleware = function that takes 4 parameters identifies an error handler, calling next() with argument means to handle an error
