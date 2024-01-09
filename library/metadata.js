@@ -1,5 +1,10 @@
 "use strict";
 
+let lib = {
+  fs: require('fs'),
+  path: require('path'),
+}
+
 function metadataAPI(req, res, next) {
   const configData = g.serviceConfig.data;
   const ret = res.returner;

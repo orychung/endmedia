@@ -1,7 +1,7 @@
 "use strict";
 //main.js for node.js server start
 const path = require('path');
-const endfw = require('endfw');
+globalThis.endfw = require('endfw');
 
 const PROJECT = 'endmedia';
 g.rootPath = path.resolve()+'/..';
@@ -19,7 +19,6 @@ globalThis.loadDynamic = function loadDynamic() {
   if (ingestAPI) endmedia.mediaRoute.use(ingestAPI, 'ingest');
   if (automateAPI) endmedia.mediaRoute.all('/automate/*', automateAPI, 'automate');
   if (metadataAPI) endmedia.mediaRoute.all('/metadata/*', metadataAPI, 'metadata');
-  console.log(endmedia.mediaRoute.middlewares);
 }
 
 let endmedia = require('endmedia');
@@ -51,7 +50,7 @@ mainRoute.all('/web/css/*', endfw.lessCss({
   contextPath: '/web/css',
   pathFromReq: req=>req.parsedUrl.remainingPath(),
 }));
-mainRoute.use((req, res, next)=>{
+mainRoute.use(function webFiles(req, res, next) {
   if (req.method=='POST') g.server.log(JSON.stringify(req.body)); // activate this line for debug only
   
   let ret = res.returner;
@@ -70,7 +69,7 @@ globalThis.loadDynamic();
 
 g.server.app.use(mainRoute.handler);
 // middleware = function that takes 4 parameters identifies an error handler, calling next() with argument means to handle an error
-g.server.app.use(function (e, req, res, next) {
+g.server.app.use(function otherError(e, req, res, next) {
   console.error(e);
   res.status(400).send('other errors');
 });

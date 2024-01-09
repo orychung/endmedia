@@ -4,6 +4,7 @@ let lib = {
   fs: require('fs'),
   path: require('path'),
 }
+const dynamicLib = endfw.dynamic.dynamicLibFor('../library');
 
 function ingestAPI(req, res, next) {
   const configData = g.serviceConfig.data;
@@ -15,26 +16,8 @@ function ingestAPI(req, res, next) {
     return ret.json({done:'loadDynamic done!'});
   }
   
-  if (url.seg(0) == 'mediaFile') {
-    console.log(req.p);
-    
-    let endfw = require('endfw');
-    let fSeg = new endfw.file.FileSegment({
-      basePath: configData.libraryPaths[0],
-    });
-    let unresolvedPath = fSeg.pathExp(req)
-      .replace(/[\\]/g, '/')
-      .replace(/^\.([\/$])/, fSeg.basePath+'$1');
-    console.log('unresolvedPath',unresolvedPath);
-    let path = lib.path.resolve(unresolvedPath);
-    console.log([
-      fSeg.ingestRegExp,
-      path,
-      fSeg.ingestRegExp.test(path)
-    ]);
-    
-    return ret.json({done:'dev print done!'});
-  }
+  // custom handler to be added below this line
+  // avoid adding above loadDynamic, because that can ruin the loadDynamic
   
   if (url.seg(0) != 'dev') return next();
   if (url.seg(1) == 'test') {
@@ -49,7 +32,7 @@ if (typeof module === 'undefined') {
 } else {
   module.exports = {
     ingestAPI,
-    //metadataAPI,
-    //automateAPI,
+    metadataAPI: dynamicLib('/metadata').metadataAPI,
+    automateAPI: dynamicLib('/automate').automateAPI,
   }
 }
