@@ -3,7 +3,7 @@
 let lib = {
   fs: require('fs'),
   path: require('path'),
-}
+};
 
 function automateAPI(req, res, next) {
   const configData = g.serviceConfig.data;

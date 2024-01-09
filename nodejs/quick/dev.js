@@ -3,7 +3,7 @@
 let lib = {
   fs: require('fs'),
   path: require('path'),
-}
+};
 const dynamicLib = endfw.dynamic.dynamicLibFor('../library');
 
 function ingestAPI(req, res, next) {
