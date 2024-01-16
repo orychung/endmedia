@@ -13,6 +13,7 @@ class MediaLibrary {
   }
 }
 
+if (!g.serviceConfig) throw '[endmedia/metadata] g.serviceConfig must be created before loading endmedia';
 var configData = g.serviceConfig.data;
 g.media = {
   files: {},
@@ -24,7 +25,7 @@ g.media = {
   ),
 };
 
-function metadataAPI(req, res, next) {
+async function metadataAPI(req, res, next) {
   const ret = res.returner;
   const url = req.parsedUrl;
   
@@ -35,7 +36,16 @@ function metadataAPI(req, res, next) {
     - mkdir if data dir is missing
     - touch file if text file is missing
     */
-    g.media.files = endfw.fileUtil.DelimitedText;
+    console.log({'configData.path':configData.path});
+    let tryMkdir = lib.fs.promises.mkdir(configData.path);
+    await Promise.allSettled([tryMkdir]);
+    let filesDT = new endfw.file.DelimitedText({
+      path:configData.path+'/files'
+    });
+    filesDT.writeArray([{a:3, b:'abc'}],['a','b']);
+    g.media.files = await filesDT.readAsArray(['a','b']);
+    console.error(g.media.files);
+    ret.json({done:{}});
   } else {return ret.jsonMsg.methodNotFound();
   }
 };

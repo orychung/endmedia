@@ -13,6 +13,12 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4.1/client/shortcuts.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4.1/client/quick_vue.js"></script>
 <script type="text/javascript" id="main">
+Object.assign(Vue.endAddOn.commonMethods, {
+  loadDynamic() {http.get('/dev/loadDynamic')},
+  testInit() {http.get('/metadata/init')},
+});
+</script>
+<script type="text/javascript" id="main">
 
 async function initPage() {
   g.ui = {
@@ -48,6 +54,8 @@ async function basicTest() {
 <body onload="initPage()">
 <div id="screen" class="flex-row flex-stretch full-size">
   <flex-layout class="col vscroll tool">
+    <button @click="loadDynamic">Load Dynamic</button>
+    <button @click="testInit">Test Init</button>
   </flex-layout>
   <flex-layout class="col vscroll flex-remain">
   </flex-layout>
