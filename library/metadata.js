@@ -11,6 +11,9 @@ class MediaLibrary {
   constructor(options) {
     Object.assign(this, options);
   }
+  async init() {
+    
+  }
 }
 
 if (!g.serviceConfig) throw '[endmedia/metadata] g.serviceConfig must be created before loading endmedia';
@@ -24,6 +27,23 @@ g.media = {
     (v,k)=>new MediaLibrary({path: v}),
   ),
 };
+g.mediaFiles = {
+  files: new endfw.file.DelimitedText({
+    path: configData.path+'/files',
+    keys: ['path','title','artist'],
+    indexedKey: 'path',
+  }),
+  metadata: new endfw.file.DelimitedText({
+    path: configData.path+'/metadata',
+    keys: ['path','field','value'],
+    indexedKey: 'path',
+  }),
+  automations: new endfw.file.DelimitedText({
+    path: configData.path+'/automations',
+    keys: ['path','type','config'],
+    indexedKey: 'path',
+  }),
+};
 
 async function metadataAPI(req, res, next) {
   const ret = res.returner;
@@ -32,19 +52,14 @@ async function metadataAPI(req, res, next) {
   if (url.seg(1) == 'listLibrary') {
     ret.json(configData.libraryPaths);
   } else if (url.seg(1) == 'init') {
-    /* TODO:
-    - mkdir if data dir is missing
-    - touch file if text file is missing
-    */
     console.log({'configData.path':configData.path});
     let tryMkdir = lib.fs.promises.mkdir(configData.path);
     await Promise.allSettled([tryMkdir]);
-    let filesDT = new endfw.file.DelimitedText({
-      path:configData.path+'/files'
-    });
-    filesDT.writeArray([{a:3, b:'abc'}],['a','b']);
-    g.media.files = await filesDT.readAsArray(['a','b']);
-    console.error(g.media.files);
+    await Promise.allSettled(g.mediaFiles.mapArray(async (file, key)=>{
+      g.media[key] = (await file.readAsArray()).lookupOf(file.indexedKey);
+    }));
+    await Promise.allSettled(g.media.libraries.mapArray(lib=>lib.init());
+    console.error(g.media);
     ret.json({done:{}});
   } else {return ret.jsonMsg.methodNotFound();
   }
