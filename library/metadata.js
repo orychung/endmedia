@@ -14,7 +14,7 @@ class MediaLibrary {
   async init() {
     this.loaded = false;
     this.files = {};
-    let extList = g.media.settings.extList.split(',');
+    let extList = g.media.settings.extList.value.split(',');
     let fileEntries =
       (await lib.fs.promises.readdir(this.path,{recursive: true}))
       .filter(x=>!x.startsWith('['))
@@ -42,6 +42,7 @@ g.media = {
   ),
 };
 g.mediaFiles = {
+  // TODO: support file partition
   settings: new endfw.file.DelimitedText({
     path: configData.path+'/settings',
     keys: ['setting','value'],
@@ -54,7 +55,7 @@ g.mediaFiles = {
   }),
   metadata: new endfw.file.DelimitedText({
     path: configData.path+'/metadata',
-    keys: ['path','field','value'],
+    keys: ['path','metadata'],
     indexedKey: 'path',
   }),
   automations: new endfw.file.DelimitedText({
@@ -71,7 +72,10 @@ async function initAll() {
   await Promise.allSettled(g.mediaFiles.mapArray(async (file, key)=>{
     g.media[key] = (await file.readAsArray()).lookupOf(file.indexedKey);
   }));
-  g.media.settings.touch('extList','mp3,flac');
+  g.media.settings.touch('extList', {
+    setting:'extList',
+    value:'mp3,flac',
+  });
   await Promise.allSettled(g.media.libraries.mapArray(lib=>lib.init()));
   console.error(g.media);
 }
@@ -82,9 +86,11 @@ async function metadataAPI(req, res, next) {
   
   if (url.seg(1) == 'listLibrary') {
     ret.json(configData.libraryPaths);
+  } else if (['settings','files','metadata'].includes(url.seg(1))) {
+    ret.json(g.media[url.seg(1)]);
   } else if (url.seg(1) == 'listFiles') {
     if (!(req.p.library in g.media.libraries)) return ret.jsonError(404, 'library not found');
-    ret.json({data:g.media.libraries[req.p.library].files});
+    ret.json(g.media.libraries[req.p.library].files);
   } else if (url.seg(1) == 'init') {
     await initAll();
     ret.json({done:{}});

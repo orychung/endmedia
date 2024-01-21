@@ -4,30 +4,41 @@
 <title>Automate</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4.1/vue/control.css" />
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4.1/lib/jquery.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4.1/lib/vue.global.prod.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4.1/common/builtin.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4.1/common/global.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4.1/client/music.js" charset="utf-8"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4.1/client/shortcuts.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4.1/client/quick_vue.js"></script>
+<link rel="stylesheet" type="text/css" href="../../endfw/vue/layout.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/vue/control.css" />
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/lib/jquery.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/lib/vue.global.prod.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/common/builtin.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/common/global.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/client/music.js" charset="utf-8"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/client/shortcuts.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/client/quick_vue.js"></script>
 <script type="text/javascript" id="method">
 Object.assign(Vue.endAddOn.commonMethods, {
   async testInit() {
     await http.get('/dev/loadDynamic');
     await http.get('/metadata/init');
   },
+  changeLibrary() {
+    
+  },
 });
+</script>
+<script type="text/javascript" id="model">
+class MediaFile {
+  constructor(data) {Object.assign(this, data);}
+}
 </script>
 <script type="text/javascript" id="main">
 async function initPage() {
+  globalThis.all = g;
   g.ui = {
     themeFaceHue: 120,
+    current: {},
   };
-  globalThis.all = g;
 
-  await Vue.endAddOn.loadTemplateURLs('https://cdn.jsdelivr.net/gh/orychung/endfw@0.4/vue/control.xml');
+  //await Vue.endAddOn.loadTemplateURLs('https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/vue/control.xml');
+  await Vue.endAddOn.loadTemplateURLs('../../endfw/vue/control.xml');
   Vue.endAddOn.templates = Vue.endAddOn.templates.concat(Array.from($('vueTemplate')));
   Vue.endAddOn.createApp({
     mountSelectors: ['#screen'],
@@ -37,14 +48,36 @@ async function initPage() {
 }
 
 async function initData() {
-  let libraryList = await http.get('/metadata/listLibrary');
+  g.settings = await http.get('/metadata/settings');
+  g.files = await http.get('/metadata/files');
+  g.metadata = await http.get('/metadata/metadata');
   g.libraries = {};
-  for await (const x of libraryList.map(async x=>[x,await http.post('/metadata/listFiles', {library: x})])) {
-    g.libraries[x[0]] = {
+  let libraryList = await http.get('/metadata/listLibrary');
+  for await (const x of
+    libraryList.map(async x=>[
+      x,
+      await http.post('/metadata/listFiles', {library: x})
+    ])
+  ) {
+    all.libraries[x[0]] = {
       path: x[0],
-      files: x[1].data,
+      files: x[1],
     };
   }
+  if (libraryList.length) all.ui.current.library = libraryList[0];
+  all.ui.fileGrid = {
+    filter: {
+      path: d=>{
+        if (!all.ui.fileGrid.filterPath) return true;
+        return d.path.includes(all.ui.fileGrid.filterPath);
+      },
+    },
+    sorting: {},
+    columns: [
+      {heading: 'Path', display: d=>d.path},
+    ],
+    data: all.libraries[all.ui.current.library].files,
+  };
   
   basicTest();
 }
@@ -66,16 +99,24 @@ async function basicTest() {
 <vueTemplates>
 </vueTemplates>
 <body onload="initPage()">
-<div id="screen" class="flex-row flex-stretch full-size">
+<flex-layout id="screen" class="row flex-stretch full-size">
   <flex-layout class="col vscroll tool">
     <button @click="testInit">Re-Init</button>
+    <button @click="changeLibrary">Change Library</button>
   </flex-layout>
   <flex-layout class="col vscroll flex-remain">
+    <div v-if="all.ui.fileGrid">
+      <span>
+        <label for="pathFilter">Path Filter</label>
+        <input id="pathFilter" type="text" v-model="all.ui.fileGrid.filterPath"></input>
+      </span>
+      <t-list-grid :od="all.ui.fileGrid"></t-list-grid>
+    </div>
   </flex-layout>
   <screen-layer style="--base-z-index:20;">
     <t-cover :all="all"></t-cover>
     <t-contextmenu :all="all" :w="all.ui.contextmenus"></t-contextmenu>
   </screen-layer>
-</div>
+</flex-layout>
 </body>
 </html>
