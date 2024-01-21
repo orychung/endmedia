@@ -12,13 +12,27 @@ class MediaLibrary {
     Object.assign(this, options);
   }
   async init() {
-    
+    this.loaded = false;
+    this.files = {};
+    let extList = g.media.settings.extList.split(',');
+    let fileEntries =
+      (await lib.fs.promises.readdir(this.path,{recursive: true}))
+      .filter(x=>!x.startsWith('['))
+      .filter(x=>extList.includes(x.toLowerCase().split('.').at(-1)));
+    for (const fileEntry of fileEntries) {
+      this.files[fileEntry] = {
+        path: fileEntry,
+        stat: await lib.fs.promises.stat(this.path+'/'+fileEntry),
+      };
+    }
+    this.loaded = true;
   }
 }
 
 if (!g.serviceConfig) throw '[endmedia/metadata] g.serviceConfig must be created before loading endmedia';
 var configData = g.serviceConfig.data;
 g.media = {
+  settings: {},
   files: {},
   metadata: {},
   automations: {},
@@ -28,6 +42,11 @@ g.media = {
   ),
 };
 g.mediaFiles = {
+  settings: new endfw.file.DelimitedText({
+    path: configData.path+'/settings',
+    keys: ['setting','value'],
+    indexedKey: 'setting',
+  }),
   files: new endfw.file.DelimitedText({
     path: configData.path+'/files',
     keys: ['path','title','artist'],
@@ -40,10 +59,22 @@ g.mediaFiles = {
   }),
   automations: new endfw.file.DelimitedText({
     path: configData.path+'/automations',
-    keys: ['path','type','config'],
-    indexedKey: 'path',
+    keys: ['target','type','config'],
+    indexedKey: 'target',
   }),
 };
+
+async function initAll() {
+  console.log({'configData.path':configData.path});
+  let tryMkdir = lib.fs.promises.mkdir(configData.path);
+  await Promise.allSettled([tryMkdir]);
+  await Promise.allSettled(g.mediaFiles.mapArray(async (file, key)=>{
+    g.media[key] = (await file.readAsArray()).lookupOf(file.indexedKey);
+  }));
+  g.media.settings.touch('extList','mp3,flac');
+  await Promise.allSettled(g.media.libraries.mapArray(lib=>lib.init()));
+  console.error(g.media);
+}
 
 async function metadataAPI(req, res, next) {
   const ret = res.returner;
@@ -51,15 +82,11 @@ async function metadataAPI(req, res, next) {
   
   if (url.seg(1) == 'listLibrary') {
     ret.json(configData.libraryPaths);
+  } else if (url.seg(1) == 'listFiles') {
+    if (!(req.p.library in g.media.libraries)) return ret.jsonError(404, 'library not found');
+    ret.json({data:g.media.libraries[req.p.library].files});
   } else if (url.seg(1) == 'init') {
-    console.log({'configData.path':configData.path});
-    let tryMkdir = lib.fs.promises.mkdir(configData.path);
-    await Promise.allSettled([tryMkdir]);
-    await Promise.allSettled(g.mediaFiles.mapArray(async (file, key)=>{
-      g.media[key] = (await file.readAsArray()).lookupOf(file.indexedKey);
-    }));
-    await Promise.allSettled(g.media.libraries.mapArray(lib=>lib.init());
-    console.error(g.media);
+    await initAll();
     ret.json({done:{}});
   } else {return ret.jsonMsg.methodNotFound();
   }

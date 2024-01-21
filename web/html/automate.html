@@ -12,14 +12,15 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4.1/client/music.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4.1/client/shortcuts.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.4.1/client/quick_vue.js"></script>
-<script type="text/javascript" id="main">
+<script type="text/javascript" id="method">
 Object.assign(Vue.endAddOn.commonMethods, {
-  loadDynamic() {http.get('/dev/loadDynamic')},
-  testInit() {http.get('/metadata/init')},
+  async testInit() {
+    await http.get('/dev/loadDynamic');
+    await http.get('/metadata/init');
+  },
 });
 </script>
 <script type="text/javascript" id="main">
-
 async function initPage() {
   g.ui = {
     themeFaceHue: 120,
@@ -32,17 +33,30 @@ async function initPage() {
     mountSelectors: ['#screen'],
   });
 
+  initData();
+}
+
+async function initData() {
+  let libraryList = await http.get('/metadata/listLibrary');
+  g.libraries = {};
+  for await (const x of libraryList.map(async x=>[x,await http.post('/metadata/listFiles', {library: x})])) {
+    g.libraries[x[0]] = {
+      path: x[0],
+      files: x[1].data,
+    };
+  }
+  
   basicTest();
 }
 
 async function basicTest() {
-  console.log('listLibrary', await http.get('/metadata/listLibrary'));
+  let library = Object.keys(g.libraries)[0];
   console.log('readFile', await http.post('/mediaFile/readFile', {
-    libraryPath: 'D:/Songs/Anime',
+    library: library,
     path: '[m3u]/2-years.m3u8',
   }));
   console.log('readdir', await http.post('/mediaFile/readdir', {
-    libraryPath: 'D:/Songs/Anime',
+    library: library,
     path: '[m3u]',
   }));
 }
@@ -54,8 +68,7 @@ async function basicTest() {
 <body onload="initPage()">
 <div id="screen" class="flex-row flex-stretch full-size">
   <flex-layout class="col vscroll tool">
-    <button @click="loadDynamic">Load Dynamic</button>
-    <button @click="testInit">Test Init</button>
+    <button @click="testInit">Re-Init</button>
   </flex-layout>
   <flex-layout class="col vscroll flex-remain">
   </flex-layout>

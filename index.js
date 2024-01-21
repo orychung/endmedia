@@ -16,8 +16,8 @@ mediaRoute.use((req, res, next)=>next(), 'ingest');
 mediaRoute.all(
   '/mediaFile/*',
   (req, res, next)=>{
-    const handler = pathHandler[req.p.libraryPath];
-    if (!handler) return endfw.file.FileSegment.errorCallback(res, undefined, 404, "libraryPath not found");
+    const handler = pathHandler[req.p.library];
+    if (!handler) return endfw.file.FileSegment.errorCallback(res, undefined, 404, "library not found");
     return handler(req, res, ()=>{res.returner.jsonError(404, "mediaFile method not found")});
   },
   'mediaFile'
