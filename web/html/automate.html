@@ -6,13 +6,19 @@
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
 <link rel="stylesheet" type="text/css" href="../../endfw/vue/layout.css" />
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/vue/control.css" />
+<script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.8/dist/jsmediatags.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/lib/jquery.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/lib/vue.global.prod.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/common/builtin.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/common/global.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/client/music.js" charset="utf-8"></script>
+<script type="text/javascript" src="../../endfw/client/music.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/client/shortcuts.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/client/quick_vue.js"></script>
+<style>
+vueTemplate {
+  display: none;
+}
+</style>
 <script type="text/javascript" id="method">
 Object.assign(Vue.endAddOn.commonMethods, {
   async testInit() {
@@ -20,13 +26,32 @@ Object.assign(Vue.endAddOn.commonMethods, {
     await http.get('/metadata/init');
   },
   changeLibrary() {
-    
+    //TODO: define share-able UI for quick input
   },
 });
 </script>
 <script type="text/javascript" id="model">
 class MediaFile {
-  constructor(data) {Object.assign(this, data);}
+  constructor(...args) {
+    Object.assign(this, ...args);
+  }
+  async load() {
+    if (this.data == undefined) this.data = await http.post.asBinary('/mediaFile/readFile', {library: this.library, path: this.path});
+    return this;
+  };
+  async loadAudio() {
+    await this.load();
+    await g.audioBuffer.load(this.data);
+    return this;
+  };
+  async start(...args) {
+    this.pause(this);
+    await this.loadAudio();
+    g.audioBuffer.restart(...args);
+  }
+  pause() {
+    g.audioBuffer.stop();
+  }
 }
 </script>
 <script type="text/javascript" id="main">
@@ -36,6 +61,8 @@ async function initPage() {
     themeFaceHue: 120,
     current: {},
   };
+  g.audio = {ctx: new AudioContext()};
+  g.audioBuffer = new MusicalBuffer(g.audio.ctx);
 
   //await Vue.endAddOn.loadTemplateURLs('https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/vue/control.xml');
   await Vue.endAddOn.loadTemplateURLs('../../endfw/vue/control.xml');
@@ -61,7 +88,7 @@ async function initData() {
   ) {
     all.libraries[x[0]] = {
       path: x[0],
-      files: x[1],
+      files: x[1].mapObject(file=>new MediaFile(file, {library: x[0]})),
     };
   }
   if (libraryList.length) all.ui.current.library = libraryList[0];
@@ -74,29 +101,20 @@ async function initData() {
     },
     sorting: {},
     columns: [
-      {heading: 'Path', display: d=>d.path},
+      { heading: 'Path', display: d=>d.path },
+      { heading: 'Actions', template: 't-media-actions' },
     ],
     data: all.libraries[all.ui.current.library].files,
   };
   
-  basicTest();
-}
-
-async function basicTest() {
-  let library = Object.keys(g.libraries)[0];
-  console.log('readFile', await http.post('/mediaFile/readFile', {
-    library: library,
-    path: '[m3u]/2-years.m3u8',
-  }));
-  console.log('readdir', await http.post('/mediaFile/readdir', {
-    library: library,
-    path: '[m3u]',
-  }));
 }
 
 </script>
 </head>
 <vueTemplates>
+  <vueTemplate id="t-media-actions">
+    <button @click="od.row.load().then(x=>x.start())">Play</button>
+  </vueTemplate>
 </vueTemplates>
 <body onload="initPage()">
 <flex-layout id="screen" class="row flex-stretch full-size">

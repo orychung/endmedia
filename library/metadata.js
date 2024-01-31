@@ -79,6 +79,7 @@ async function initAll() {
   await Promise.allSettled(g.media.libraries.mapArray(lib=>lib.init()));
   console.error(g.media);
 }
+initAll();
 
 async function metadataAPI(req, res, next) {
   const ret = res.returner;
