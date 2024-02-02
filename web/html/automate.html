@@ -11,6 +11,7 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/lib/vue.global.prod.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/common/builtin.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/common/global.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/common/promise.js"></script>
 <script type="text/javascript" src="../../endfw/client/music.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/client/shortcuts.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/client/quick_vue.js"></script>
@@ -44,6 +45,18 @@ class MediaFile {
     await g.audioBuffer.load(this.data);
     return this;
   };
+  async register() {
+    let tags = (await this.mediaTags()).tags; //TODO: wrap this in try block
+    all.files[this.path] = {
+      path: this.path,
+      title: tags.title,
+      performer: tags.artist,
+      year: tags.TDRC?.data,
+      album: tags.album,
+      'track#': tags.track.split('/')[0],
+    };
+    all.thumbnails[this.path] = tags.picture;
+  }
   async start(...args) {
     this.pause(this);
     await this.loadAudio();
@@ -51,6 +64,15 @@ class MediaFile {
   }
   pause() {
     g.audioBuffer.stop();
+  }
+  async mediaTags() {
+    await this.load();
+    let c = triggerFactory();
+    window.jsmediatags.read(new Blob([this.data]),{
+      onSuccess:(tags)=>c.fire(tags),
+      onError:(e)=>c.cancel(e)
+    });
+    return c.promise;
   }
 }
 </script>
@@ -75,7 +97,9 @@ async function initPage() {
 }
 
 async function initData() {
+  await http.get('/metadata/init');
   g.settings = await http.get('/metadata/settings');
+  g.thumbnails = await http.get('/metadata/thumbnails');
   g.files = await http.get('/metadata/files');
   g.metadata = await http.get('/metadata/metadata');
   g.libraries = {};
@@ -106,14 +130,14 @@ async function initData() {
     ],
     data: all.libraries[all.ui.current.library].files,
   };
-  
 }
 
 </script>
 </head>
 <vueTemplates>
   <vueTemplate id="t-media-actions">
-    <button @click="od.row.load().then(x=>x.start())">Play</button>
+    <button @click="od.row.start()">Play</button>
+    <button v-if="!(od.row.path in all.files)" @click="od.row.register()">Register</button>
   </vueTemplate>
 </vueTemplates>
 <body onload="initPage()">
@@ -128,7 +152,7 @@ async function initData() {
         <label for="pathFilter">Path Filter</label>
         <input id="pathFilter" type="text" v-model="all.ui.fileGrid.filterPath"></input>
       </span>
-      <t-list-grid :od="all.ui.fileGrid"></t-list-grid>
+      <t-list-grid :od="all.ui.fileGrid" :all="all"></t-list-grid>
     </div>
   </flex-layout>
   <screen-layer style="--base-z-index:20;">
