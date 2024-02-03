@@ -21,6 +21,10 @@ box {
   display: flex;
   gap: 0px;
 }
+box.performer {
+  font-size: 12px;
+  max-width: 200px;
+}
 img.thumbnail {
   width: calc(80px / var(--device-pixel-ratio));
 }
@@ -41,6 +45,36 @@ Object.assign(Vue.endAddOn.commonMethods, {
 </script>
 <script type="text/javascript" id="model">
 g.debug = {};
+g.audio = {ctx: new AudioContext()};
+g.audioBuffer = new MusicalBuffer(g.audio.ctx);
+g.audioPlayer = {
+  history: [],
+  donePlay(type) {
+    this.currentPlay?.fire(type);
+  },
+  async playMediaFile(mediaFile, ...args) {
+    await mediaFile.load();
+    this.history.push(mediaFile);
+    g.audioBuffer.stop();
+    this.donePlay('stopped');
+    await g.audioBuffer.load(mediaFile.data.slice());
+    g.audioBuffer.restart(...args);
+    this.currentPlay = triggerFactory();
+    await this.currentPlay;
+  },
+  playNext() {
+    let candidateMap = g.ui.fileGrid.data.mapObject();
+    g.audioPlayer.history.forEach(x=>{delete candidateMap[x];});
+    let candidates = Object.keys(candidateMap);
+    let selected = candidates[Math.floor(Math.random()*candidates.length)];
+    g.ui.fileGrid.data[selected].start();
+  },
+};
+g.audioBuffer.addEventListener('ended', e=>{
+  g.audioPlayer.donePlay('ended');
+  g.audioPlayer.playNext();
+});
+
 g.loadedQueue = Array(0);
 g.loadedQueue.push = function push(file) {
   const KEEP_SIZE = 3;
@@ -55,16 +89,12 @@ class MediaFile {
     Object.assign(this, ...args);
   }
   async load() {
-    if (this.data == undefined) this.data = await http.post.asBinary('/mediaFile/readFile', {library: this.library, path: this.path});
+    if (this.data == undefined)
+      this.data = await http.post.asBinary('/mediaFile/readFile', {library: this.library, path: this.path});
     g.loadedQueue.push(this);
     return this;
   }
-  async loadAudio() {
-    await this.load();
-    await g.audioBuffer.load(this.data.slice());
-    g.audioBuffer.filename = this.path;
-    g.audioBuffer.library = this.library;
-    return this;
+  async loadAudio(audioBuffer) {
   }
   async register() {
     let tags = (await this.mediaTags()).tags; //TODO: wrap this in try block
@@ -77,31 +107,31 @@ class MediaFile {
       'track#': tags.track?.split('/')?.[0],
     };
     
-    const THUMBNAIL_SIZE = 80;
-    let blob = new Blob([new Uint8Array(tags.picture.data)],{type: tags.picture.format});
-    let url = URL.createObjectURL(blob);
-    let canvas = document.createElement('canvas');
-    g.debug.canvas = canvas;
-    await canvas.loadFile(url, {
-      height: THUMBNAIL_SIZE,
-      width: THUMBNAIL_SIZE,
-    });
-    all.thumbnails[this.path] = {
-      path: this.path,
-      dataURL: canvas.toDataURL('image/jpeg', 0.99),
-    };
-    await http.post('/metadata/thumbnails', {dataset: {
-      [this.path]: all.thumbnails[this.path],
-    }});
+    if (tags.picture) {
+      const THUMBNAIL_SIZE = 80;
+      let blob = new Blob([new Uint8Array(tags.picture.data)],{type: tags.picture.format});
+      let url = URL.createObjectURL(blob);
+      let canvas = document.createElement('canvas');
+      g.debug.canvas = canvas;
+      await canvas.loadFile(url, {
+        height: THUMBNAIL_SIZE,
+        width: THUMBNAIL_SIZE,
+      });
+      all.thumbnails[this.path] = {
+        path: this.path,
+        dataURL: canvas.toDataURL('image/jpeg', 0.99),
+      };
+      await http.post('/metadata/thumbnails', {dataset: {
+        [this.path]: all.thumbnails[this.path],
+      }});
+    }
     
     await http.post('/metadata/files', {dataset: {
       [this.path]: all.files[this.path],
     }});
   }
   async start(...args) {
-    g.audioBuffer.stop();
-    await this.loadAudio();
-    g.audioBuffer.restart(...args);
+    g.audioPlayer.playMediaFile(this, ...args);
   }
   async mediaTags() {
     await this.load();
@@ -121,8 +151,6 @@ async function initPage() {
     themeFaceHue: 120,
     current: {},
   };
-  g.audio = {ctx: new AudioContext()};
-  g.audioBuffer = new MusicalBuffer(g.audio.ctx);
 
   //await Vue.endAddOn.loadTemplateURLs('https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/vue/control.xml');
   await Vue.endAddOn.loadTemplateURLs('../../endfw/vue/control.xml');
@@ -165,6 +193,7 @@ async function initData() {
     columns: [
       { heading: '🖼', template: 't-media-thumbnail' },
       { heading: 'Path', display: d=>d.path },
+      { heading: 'Performer', display: d=>all.files[d.path]?.performer, 'class': 'performer' },
       { heading: 'Actions', template: 't-media-actions' },
     ],
     data: all.libraries[all.ui.current.library].files,
