@@ -1,3 +1,4 @@
 /.local
 /.log
 /nodejs/node_modules
+/nodejs/package-lock.json

@@ -8,6 +8,9 @@
     "certPath": "../.local/ssl/cert.pem"
   },
   "data": {
-    "path": "<root path of data, e.g. C:/Users/ABC/AppData/Roaming/endmedia>"
+    "path": "<root path of data, e.g. C:/Users/ABC/AppData/Roaming/endmedia>",
+    "libraryPaths": [
+      "<path of a media library, e.g. C:/Users/ABC/Music>"
+    ]
   }
 }
