@@ -57,7 +57,7 @@ g.mediaFiles = {
   }),
   thumbnails: new DelimitedTextData({
     path: configData.path+'/thumbnails',
-    keys: ['path','base64'],
+    keys: ['path','dataURL'],
     indexedKey: 'path',
   }),
   files: new DelimitedTextData({
