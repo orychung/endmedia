@@ -4,18 +4,18 @@
 <title>Automate</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
-<link rel="stylesheet" type="text/css" href="../../endfw/vue/layout.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/vue/control.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/vue/layout.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/vue/control.css" />
 <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.8/dist/jsmediatags.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/lib/jquery.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/lib/vue.global.prod.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/common/builtin.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/common/global.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/common/promise.js"></script>
-<script type="text/javascript" src="../../endfw/client/canvas.js"></script>
-<script type="text/javascript" src="../../endfw/client/music.js" charset="utf-8"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/client/shortcuts.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/client/quick_vue.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/lib/jquery.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/lib/vue.global.prod.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/common/builtin.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/common/global.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/common/promise.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/client/canvas.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/client/music.js" charset="utf-8"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/client/shortcuts.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/client/quick_vue.js"></script>
 <style>
 box {
   display: flex;
@@ -61,7 +61,7 @@ g.audioPlayer = {
     await g.audioBuffer.load(mediaFile.data.slice());
     g.audioBuffer.restart(...args);
     this.currentPlay = triggerFactory();
-    await this.currentPlay;
+    await this.currentPlay.promise;
   },
   playNext() {
     let candidateMap = g.ui.fileGrid.data.mapObject();
@@ -72,6 +72,7 @@ g.audioPlayer = {
   },
 };
 g.audioBuffer.addEventListener('ended', e=>{
+  if (!g.audioBuffer.buffer) return;
   g.audioPlayer.donePlay('ended');
   g.audioPlayer.playNext();
 });
@@ -153,8 +154,8 @@ async function initPage() {
     current: {},
   };
 
-  //await Vue.endAddOn.loadTemplateURLs('https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.1/vue/control.xml');
-  await Vue.endAddOn.loadTemplateURLs('../../endfw/vue/control.xml');
+  await Vue.endAddOn.loadTemplateURLs('https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/vue/control.xml');
+  //await Vue.endAddOn.loadTemplateURLs('../../endfw/vue/control.xml');
   Vue.endAddOn.templates = Vue.endAddOn.templates.concat(Array.from($('vueTemplate')));
   Vue.endAddOn.createApp({
     mountSelectors: ['#screen'],
