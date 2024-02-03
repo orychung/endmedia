@@ -10,9 +10,9 @@ Home Media Library based on endfw
     2. update `\.local\endmedia\service.json` to apply settings
 1. go to `.\nodejs` folder
 1. ```cmd
-npm i
-```
+    npm i
+    ```
 1. ```cmd
-endmedia.cmd
-```
+    endmedia.cmd
+    ```
     * to run as another user, try `cmdstart_node.cmd`
