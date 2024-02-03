@@ -51,6 +51,7 @@ g.audioPlayer = {
   history: [],
   donePlay(type) {
     this.currentPlay?.fire(type);
+    delete this.currentPlay;
   },
   async playMediaFile(mediaFile, ...args) {
     await mediaFile.load();
@@ -218,6 +219,7 @@ async function initData() {
   <flex-layout class="col vscroll tool">
     <button @click="testInit">Re-Init</button>
     <button @click="changeLibrary">Change Library</button>
+    <button @click="all.audioBuffer.stop()">Stop Player</button>
   </flex-layout>
   <flex-layout class="col vscroll flex-remain">
     <div v-if="all.ui.fileGrid">
