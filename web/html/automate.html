@@ -3,8 +3,9 @@
 <head>
 <title>Automate</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/vue/layout.css" />
+<link rel="stylesheet" type="text/css" href="../../endfw/vue/layout.css" />
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/vue/control.css" />
 <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.8/dist/jsmediatags.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/lib/jquery.js"></script>
@@ -17,19 +18,46 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/client/shortcuts.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/client/quick_vue.js"></script>
 <style>
+body {
+  color: var(--theme-fore);
+  background: var(--theme-back);
+  margin: 0px;
+}
 box {
   display: flex;
   gap: 0px;
 }
+box.action {
+  margin-right: 10px;
+}
 box.performer {
   font-size: 12px;
   max-width: 200px;
+  overflow: hidden;
+}
+grid-heading > box {
+  margin-right: 10px;
+}
+grid-layout {
+  align-items: center;
+  overflow: hidden;
+}
+grid-row:hover > :first-child::before {
+  content: "";
+  display: block;
+  height: 80px;
+  width: 100vw;
+  position: absolute;
+  left: 0px; right: 0px;
+  background: linear-gradient(to bottom, #EEE, transparent);
+  z-index: -10;
 }
 img.thumbnail {
   width: calc(80px / var(--device-pixel-ratio));
 }
-vueTemplate {
-  display: none;
+#screen {
+  height: 100vh;
+  width: 100vw;
 }
 </style>
 <script type="text/javascript" id="method">
@@ -46,35 +74,37 @@ Object.assign(Vue.endAddOn.commonMethods, {
 <script type="text/javascript" id="model">
 g.debug = {};
 g.audio = {ctx: new AudioContext()};
-g.audioBuffer = new MusicalBuffer(g.audio.ctx);
-g.audioPlayer = {
+g.audio.buffer = new MusicalBuffer(g.audio.ctx);
+g.audio.player = {
   history: [],
   donePlay(type) {
+    document.title = 'Automate';
     this.currentPlay?.fire(type);
     delete this.currentPlay;
   },
   async playMediaFile(mediaFile, ...args) {
     await mediaFile.load();
     this.history.push(mediaFile);
-    g.audioBuffer.stop();
+    g.audio.buffer.stop();
     this.donePlay('stopped');
-    await g.audioBuffer.load(mediaFile.data.slice());
-    g.audioBuffer.restart(...args);
+    await g.audio.buffer.load(mediaFile.data.slice());
+    g.audio.buffer.restart(...args);
     this.currentPlay = triggerFactory();
+    document.title = 'Automate: Playing ' + g.files[mediaFile.path].title;
     await this.currentPlay.promise;
   },
   playNext() {
     let candidateMap = g.ui.fileGrid.data.mapObject();
-    g.audioPlayer.history.forEach(x=>{delete candidateMap[x];});
+    g.audio.player.history.forEach(x=>{delete candidateMap[x];});
     let candidates = Object.keys(candidateMap);
     let selected = candidates[Math.floor(Math.random()*candidates.length)];
     g.ui.fileGrid.data[selected].start();
   },
 };
-g.audioBuffer.addEventListener('ended', e=>{
-  if (!g.audioBuffer.buffer) return;
-  g.audioPlayer.donePlay('ended');
-  g.audioPlayer.playNext();
+g.audio.buffer.addEventListener('ended', e=>{
+  if (!g.audio.buffer.buffer) return;
+  g.audio.player.donePlay('ended');
+  g.audio.player.playNext();
 });
 
 g.loadedQueue = Array(0);
@@ -90,13 +120,24 @@ class MediaFile {
   constructor(...args) {
     Object.assign(this, ...args);
   }
+  get ext() {return this.filename.split('.').slice(1).at(-1).toUpperCase();}
+  get filename() {return this.path.split(/[\/\\]/).at(-1);}
+  get fileInfo() {return g.files[this.path];}
+  get metadata() {return g.metadata[this.path];}
+  get mimeType() {return {
+    'MP3': 'audio/mpeg; charset=utf-8',
+  }[this.ext];}
+  get thumbnail() {return g.thumbnails[this.path];}
+  info() {
+    console.log(this);
+    console.log(this.library.replace(/\//g,　'\\') + '\\' +　this.path);
+    g.debug.file = this;
+  }
   async load() {
     if (this.data == undefined)
       this.data = await http.post.asBinary('/mediaFile/readFile', {library: this.library, path: this.path});
     g.loadedQueue.push(this);
     return this;
-  }
-  async loadAudio(audioBuffer) {
   }
   async register() {
     let tags = (await this.mediaTags()).tags; //TODO: wrap this in try block
@@ -133,12 +174,12 @@ class MediaFile {
     }});
   }
   async start(...args) {
-    g.audioPlayer.playMediaFile(this, ...args);
+    g.audio.player.playMediaFile(this, ...args);
   }
   async mediaTags() {
     await this.load();
     let c = triggerFactory();
-    window.jsmediatags.read(new Blob([this.data]),{
+    window.jsmediatags.read(new Blob([this.data], {type: this.mimeType}),{
       onSuccess:(tags)=>c.fire(tags),
       onError:(e)=>c.cancel(e)
     });
@@ -172,31 +213,34 @@ async function initData() {
   g.metadata = await http.get('/metadata/metadata');
   g.libraries = {};
   let libraryList = await http.get('/metadata/listLibrary');
-  for await (const x of
-    libraryList.map(async x=>[
-      x,
-      await http.post('/metadata/listFiles', {library: x})
-    ])
+  for await (
+    const [lib, files] of
+    libraryList.map(async lib=>[lib,await http.post('/metadata/listFiles', {library: lib})])
   ) {
-    all.libraries[x[0]] = {
-      path: x[0],
-      files: x[1].mapObject(file=>new MediaFile(file, {library: x[0]})),
+    g.libraries[lib] = {
+      path: lib,
+      files: files.mapObject(file=>new MediaFile(file, {library: lib})),
     };
   }
   if (libraryList.length) all.ui.current.library = libraryList[0];
   all.ui.fileGrid = {
+    filterCond: {},
     filter: {
       path: d=>{
-        if (!all.ui.fileGrid.filterPath) return true;
-        return d.path.includes(all.ui.fileGrid.filterPath);
+        if (!all.ui.fileGrid.filterCond.path) return true;
+        return g.files[d.path]?.path?.toLowerCase().includes(all.ui.fileGrid.filterCond.path.toLowerCase());
+      },
+      performer: d=>{
+        if (!all.ui.fileGrid.filterCond.performer) return true;
+        return g.files[d.path]?.performer?.toLowerCase().includes(all.ui.fileGrid.filterCond.performer.toLowerCase());
       },
     },
     sorting: {},
     columns: [
       { heading: '🖼', template: 't-media-thumbnail' },
+      { heading: 'Actions', template: 't-media-actions', 'class': 'action' },
       { heading: 'Path', display: d=>d.path },
       { heading: 'Performer', display: d=>all.files[d.path]?.performer, 'class': 'performer' },
-      { heading: 'Actions', template: 't-media-actions' },
     ],
     data: all.libraries[all.ui.current.library].files,
   };
@@ -208,11 +252,18 @@ async function initData() {
   <vueTemplate id="t-media-thumbnail">
     <img v-for="img in [all.thumbnails[od.row.path]].filter(x=>x)"
       :src='img.dataURL' class="thumbnail"></img>
+    <div style="height: 40px; width: 0px;"></div>
   </vueTemplate>
   <vueTemplate id="t-media-actions">
-    <button @click="od.row.start()">Play</button>
-    <button v-if="!(od.row.path in all.files)" @click="od.row.register()">Register</button>
-    <button v-if="(od.row.path in all.files)" @click="all.files[od.row.path].logThis;">Log Info</button>
+    <span class="material-symbols-outlined pointer"
+      @click="od.row.start()"
+      title="Play">play_arrow</span>
+    <span class="material-symbols-outlined pointer"
+      v-if="!(od.row.path in all.files)" @click="od.row.register()"
+      title="Register">docs_add_on</span>
+    <span class="material-symbols-outlined pointer"
+      v-if="(od.row.path in all.files)" @click="od.row.info()"
+      title="Log Info">info</span>
   </vueTemplate>
 </vueTemplates>
 <body onload="initPage()">
@@ -220,13 +271,16 @@ async function initData() {
   <flex-layout class="col vscroll tool">
     <button @click="testInit">Re-Init</button>
     <button @click="changeLibrary">Change Library</button>
-    <button @click="all.audioBuffer.stop()">Stop Player</button>
+    <button @click="all.audio.buffer.stop()">Stop Player</button>
+    <button @click="all.audio.player.playNext()">Play Next</button>
   </flex-layout>
   <flex-layout class="col vscroll flex-remain">
     <div v-if="all.ui.fileGrid">
-      <span>
+      <span v-for="od in [all.ui.fileGrid.filterCond]">
         <label for="pathFilter">Path Filter</label>
-        <input id="pathFilter" type="text" v-model="all.ui.fileGrid.filterPath"></input>
+        <input id="pathFilter" type="text" v-model="od.path"></input>
+        <label for="performerFilter">Performer Filter</label>
+        <input id="performerFilter" type="text" v-model="od.performer"></input>
       </span>
       <t-list-grid :od="all.ui.fileGrid" :all="all"></t-list-grid>
     </div>
