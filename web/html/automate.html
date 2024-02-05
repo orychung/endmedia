@@ -17,6 +17,7 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/client/music.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/client/shortcuts.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/client/quick_vue.js"></script>
+<script type="text/javascript" src="../js/MediaFile.js"></script>
 <style>
 body {
   color: var(--theme-fore);
@@ -84,11 +85,17 @@ g.audio.player = {
   },
   async playMediaFile(mediaFile, ...args) {
     await mediaFile.load();
-    this.history.push(mediaFile);
+    
+    this.history.push(mediaFile.path);
+    const stat = g.stats.touch(mediaFile.path, { path: mediaFile.path, playCount: 0 });
+    stat.playCount += 1;
+    stat.lastPlay = new Date().toISOString();
+    
     g.audio.buffer.stop();
     this.donePlay('stopped');
     await g.audio.buffer.load(mediaFile.data.slice());
     g.audio.buffer.restart(...args);
+    
     this.currentPlay = triggerFactory();
     document.title = 'Automate: Playing ' + g.files[mediaFile.path].title;
     await this.currentPlay.promise;
@@ -97,6 +104,8 @@ g.audio.player = {
     let candidateMap = g.ui.fileGrid.data.mapObject();
     g.audio.player.history.forEach(x=>{delete candidateMap[x];});
     let candidates = Object.keys(candidateMap);
+    console.log(candidates.length);
+    
     let selected = candidates[Math.floor(Math.random()*candidates.length)];
     g.ui.fileGrid.data[selected].start();
   },
@@ -115,76 +124,6 @@ g.loadedQueue.push = function push(file) {
   Array.prototype.push.call(this, file);
   let unloadList = this.splice(0, this.length - KEEP_SIZE);
   unloadList.forEach(x=>delete x.data);
-}
-class MediaFile {
-  constructor(...args) {
-    Object.assign(this, ...args);
-  }
-  get ext() {return this.filename.split('.').slice(1).at(-1).toUpperCase();}
-  get filename() {return this.path.split(/[\/\\]/).at(-1);}
-  get fileInfo() {return g.files[this.path];}
-  get metadata() {return g.metadata[this.path];}
-  get mimeType() {return {
-    'MP3': 'audio/mpeg; charset=utf-8',
-  }[this.ext];}
-  get thumbnail() {return g.thumbnails[this.path];}
-  info() {
-    console.log(this);
-    console.log(this.library.replace(/\//g,　'\\') + '\\' +　this.path);
-    g.debug.file = this;
-  }
-  async load() {
-    if (this.data == undefined)
-      this.data = await http.post.asBinary('/mediaFile/readFile', {library: this.library, path: this.path});
-    g.loadedQueue.push(this);
-    return this;
-  }
-  async register() {
-    let tags = (await this.mediaTags()).tags; //TODO: wrap this in try block
-    all.files[this.path] = {
-      path: this.path,
-      title: tags.title,
-      performer: tags.artist,
-      year: tags.TDRC?.data,
-      album: tags.album,
-      'track#': tags.track?.split('/')?.[0],
-    };
-    
-    if (tags.picture) {
-      const THUMBNAIL_SIZE = 80;
-      let blob = new Blob([new Uint8Array(tags.picture.data)],{type: tags.picture.format});
-      let url = URL.createObjectURL(blob);
-      let canvas = document.createElement('canvas');
-      g.debug.canvas = canvas;
-      await canvas.loadFile(url, {
-        height: THUMBNAIL_SIZE,
-        width: THUMBNAIL_SIZE,
-      });
-      all.thumbnails[this.path] = {
-        path: this.path,
-        dataURL: canvas.toDataURL('image/jpeg', 0.99),
-      };
-      await http.post('/metadata/thumbnails', {dataset: {
-        [this.path]: all.thumbnails[this.path],
-      }});
-    }
-    
-    await http.post('/metadata/files', {dataset: {
-      [this.path]: all.files[this.path],
-    }});
-  }
-  async start(...args) {
-    g.audio.player.playMediaFile(this, ...args);
-  }
-  async mediaTags() {
-    await this.load();
-    let c = triggerFactory();
-    window.jsmediatags.read(new Blob([this.data], {type: this.mimeType}),{
-      onSuccess:(tags)=>c.fire(tags),
-      onError:(e)=>c.cancel(e)
-    });
-    return c.promise;
-  }
 }
 </script>
 <script type="text/javascript" id="main">
@@ -211,6 +150,8 @@ async function initData() {
   g.thumbnails = await http.get('/metadata/thumbnails');
   g.files = await http.get('/metadata/files');
   g.metadata = await http.get('/metadata/metadata');
+  g.stats = await http.get('/metadata/stats');
+  g.automations = await http.get('/metadata/automations');
   g.libraries = {};
   let libraryList = await http.get('/metadata/listLibrary');
   for await (
@@ -239,7 +180,7 @@ async function initData() {
     columns: [
       { heading: '🖼', template: 't-media-thumbnail' },
       { heading: 'Actions', template: 't-media-actions', 'class': 'action' },
-      { heading: 'Path', display: d=>d.path },
+      { heading: 'Path', display: d=>d.fileInfo.title || ('<' +　d.path + '>') },
       { heading: 'Performer', display: d=>all.files[d.path]?.performer, 'class': 'performer' },
     ],
     data: all.libraries[all.ui.current.library].files,
@@ -296,5 +237,14 @@ document.body.style.setProperty('--device-pixel-ratio', devicePixelRatio);
 window.addEventListener('resize',e=>{
   document.body.style.setProperty('--device-pixel-ratio', devicePixelRatio);
 });
+window.onunload = function(e) {
+  console.log(e);
+  http.post('/metadata/stats', {
+    dataset: g.audio.player.history.mapKeyValue(
+      (k,v)=>v,
+      (v,k)=>g.stats[v]
+    ),
+  });
+};
 </script>
 </html>

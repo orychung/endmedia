@@ -42,6 +42,7 @@ g.media = {
   thumbnails: {},
   files: {},
   metadata: {},
+  stats: {},
   automations: {},
   libraries: configData.libraryPaths.mapKeyValue(
     (k,v)=>v,
@@ -70,6 +71,11 @@ g.mediaFiles = {
     keys: ['path','metadata'],
     indexedKey: 'path',
   }),
+  stats: new DelimitedTextData({
+    path: configData.path+'/stats',
+    keys: ['path','playCount','lastPlay'],
+    indexedKey: 'path',
+  }),
   automations: new DelimitedTextData({
     path: configData.path+'/automations',
     keys: ['target','type','config'],
@@ -90,7 +96,6 @@ async function initAll() {
     value:'mp3,flac',
   });
   await Promise.allSettled(g.media.libraries.mapArray(lib=>lib.init()));
-  console.error(g.media);
   initAll.done = true;
 }
 initAll.done = false;
@@ -99,12 +104,17 @@ async function metadataAPI(req, res, next) {
   const ret = res.returner;
   const url = req.parsedUrl;
   
-  if (url.seg(1) == 'listLibrary') {
+  if (url.seg(1) == 'init') {
+    await initAll();
+    ret.json({done:{}});
+  } else if (!initAll.done) {
+    return ret.jsonError(503, 'server starting up');
+  } else if (url.seg(1) == 'listLibrary') {
     ret.json(configData.libraryPaths);
   } else if (url.seg(1) == 'listFiles') {
     if (!(req.p.library in g.media.libraries)) return ret.jsonError(404, 'library not found');
     ret.json(g.media.libraries[req.p.library].files);
-  } else if (['settings','thumbnails','files','metadata'].includes(url.seg(1))) {
+  } else if (url.seg(1) in g.mediaFiles) {
     if (req.method=='GET') return ret.json(g.media[url.seg(1)]);
     if (req.method=='POST') {
       if (!req.p.dataset) return ret.jsonError(400, 'dataset is required');
@@ -113,9 +123,6 @@ async function metadataAPI(req, res, next) {
       return ret.json({done:{}});
     }
     ret.jsonError(405, 'Only allow GET or POST');
-  } else if (url.seg(1) == 'init') {
-    await initAll();
-    ret.json({done:{}});
   } else {return ret.jsonMsg.methodNotFound();
   }
 };
