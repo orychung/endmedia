@@ -91,6 +91,7 @@ g.audio.player = {
     await mediaFile.load();
     
     this.history.push(mediaFile.path);
+    if (this.history.length >= 5) this.uploadHistory();
     const stat = g.stats.touch(mediaFile.path, { path: mediaFile.path, playCount: 0 });
     stat.playCount += 1;
     stat.lastPlay = new Date().toISOString();
@@ -114,12 +115,18 @@ g.audio.player = {
       weight *= Math.min(1, daysNotPlayed * 8);
       return weight;
     });
-    g.audio.player.history.slice(0,100).forEach((x,i)=>{
-      weights[x] *= i/100;
-    });
     weights = weights.asPMF();
     g.debug.weights = weights;
     g.ui.fileGrid.data[weights.sample()].start();
+  },
+  uploadHistory() {
+    http.post('/metadata/stats', {
+      dataset: this.history.mapKeyValue(
+        (k,v)=>v,
+        (v,k)=>g.stats[v]
+      ),
+    });
+    this.history = [];
   },
 };
 g.audio.buffer.addEventListener('ended', e=>{
@@ -251,12 +258,7 @@ window.addEventListener('resize',e=>{
 });
 window.onunload = function(e) {
   console.log(e);
-  http.post('/metadata/stats', {
-    dataset: g.audio.player.history.mapKeyValue(
-      (k,v)=>v,
-      (v,k)=>g.stats[v]
-    ),
-  });
+  g.audio.player.uploadHistory();
 };
 </script>
 </html>
