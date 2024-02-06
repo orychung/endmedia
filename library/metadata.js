@@ -39,10 +39,10 @@ if (!g.serviceConfig) throw '[endmedia/metadata] g.serviceConfig must be created
 var configData = g.serviceConfig.data;
 g.media = {
   settings: {},
-  thumbnails: {},
   files: {},
   metadata: {},
   stats: {},
+  thumbnails: {},
   automations: {},
   libraries: configData.libraryPaths.mapKeyValue(
     (k,v)=>v,
@@ -55,11 +55,6 @@ g.mediaFiles = {
     path: configData.path+'/settings',
     keys: ['setting','value'],
     indexedKey: 'setting',
-  }),
-  thumbnails: new DelimitedTextData({
-    path: configData.path+'/thumbnails',
-    keys: ['path','dataURL'],
-    indexedKey: 'path',
   }),
   files: new DelimitedTextData({
     path: configData.path+'/files',
@@ -74,6 +69,11 @@ g.mediaFiles = {
   stats: new DelimitedTextData({
     path: configData.path+'/stats',
     keys: ['path','playCount','lastPlay'],
+    indexedKey: 'path',
+  }),
+  thumbnails: new DelimitedTextData({
+    path: configData.path+'/thumbnails',
+    keys: ['path','dataURL'],
     indexedKey: 'path',
   }),
   automations: new DelimitedTextData({

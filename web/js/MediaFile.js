@@ -8,10 +8,11 @@ class MediaFile {
   get filename() {return this.path.split(/[\/\\]/).at(-1);}
   get fileInfo() {return g.files[this.path];}
   get metadata() {return g.metadata[this.path];}
+  get stats() {return g.stats[this.path];}
+  get thumbnail() {return g.thumbnails[this.path];}
   get mimeType() {return {
     'MP3': 'audio/mpeg; charset=utf-8',
   }[this.ext];}
-  get thumbnail() {return g.thumbnails[this.path];}
   info() {
     console.log(this);
     console.log(this.library.replace(/\//g,　'\\') + '\\' +　this.path);
