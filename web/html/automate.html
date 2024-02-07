@@ -3,6 +3,7 @@
 <head>
 <title>Automate</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
 <link rel="stylesheet" type="text/css" href="../../endfw/vue/layout.css" />
@@ -60,9 +61,25 @@ grid-row:hover > :first-child::before {
 img.thumbnail {
   width: calc(80px / var(--device-pixel-ratio));
 }
+span.white {
+  color: #FFF;
+  text-shadow: 0 0 3px #333, 0 0 6px #333;
+}
+span.yellow {
+  color: #ED3;
+  text-shadow: 0 0 3px #FFF, 0 0 6px #FFF;
+}
 #screen {
   height: 100vh;
   width: 100vw;
+}
+.absolute.pop {
+  top: 100%;
+  left: 0px;
+  z-index: 10;
+}
+.title-metadata {
+  align-items: flex-end;
 }
 </style>
 <script type="text/javascript" id="method">
@@ -91,7 +108,7 @@ g.audio.player = {
     await mediaFile.load();
     
     this.history.push(mediaFile.path);
-    if (this.history.length >= 5) this.uploadHistory();
+    if (this.history.length >= 3) this.uploadHistory();
     const stat = g.stats.touch(mediaFile.path, { path: mediaFile.path, playCount: 0 });
     stat.playCount += 1;
     stat.lastPlay = new Date().toISOString();
@@ -110,6 +127,7 @@ g.audio.player = {
     let weights = g.ui.fileGrid.data.mapObject(x=>{
       let weight = 1;
       let daysNotPlayed = (now - new Date(x.stats?.lastPlay || '1970-01-01').getTime())/86400000;
+      weight *= 1.5 ** (x.metadata?.rating || 3);
       weight *= Math.min(4, daysNotPlayed + 1);
       weight *= Math.min(1, daysNotPlayed * 3);
       weight *= Math.min(1, daysNotPlayed * 8);
@@ -118,6 +136,10 @@ g.audio.player = {
     weights = weights.asPMF();
     g.debug.weights = weights;
     g.ui.fileGrid.data[weights.sample()].start();
+  },
+  stop() {
+    g.audio.buffer.stop();
+    this.uploadHistory();
   },
   uploadHistory() {
     http.post('/metadata/stats', {
@@ -199,7 +221,7 @@ async function initData() {
     columns: [
       { heading: '🖼', template: 't-media-thumbnail', 'class': 'thumbnail' },
       { heading: 'Actions', template: 't-media-actions', 'class': 'action' },
-      { heading: 'Path', display: d=>d.fileInfo.title || ('<' +　d.path + '>') },
+      { heading: 'Title', template: 't-media-title' },
       { heading: 'Performer', display: d=>all.files[d.path]?.performer, 'class': 'performer' },
     ],
     data: all.libraries[all.ui.current.library].files,
@@ -225,13 +247,32 @@ async function initData() {
       v-if="(od.row.path in all.files)" @click="od.row.info()"
       title="Log Info">info</span>
   </vueTemplate>
+  <vueTemplate id="t-media-title">
+    <flex-layout class="col">
+      <span>{{ od.row.fileInfo.title || ('&lt;' +　od.row.path + '&gt;') }}</span>
+      <flex-layout class="row title-metadata">
+        <span class="material-symbols-rounded pointer yellow"
+          @click="od.row.pop('rating', $refs.ratingPop);">star</span>
+        <flex-layout ref="ratingPop" class="row absolute pop"
+            v-show="od.row.popFocus=='rating'" tabindex="-1"
+            @focusout="delete od.row.popFocus;">
+          <span class="material-symbols-rounded pointer"
+            v-for="i in [1,2,3,4,5,6,7]" ref="rating"
+            :class="{white:!(od.row.preselect>=i),yellow:(od.row.preselect>=i)}"
+            @mouseover="od.row.preselect=i"
+            @click="od.row.setMetadata('rating',i);">star</span>
+        </flex-layout>
+        <span>{{ od.row.metadata?.rating || 3 }}</span>
+      </flex-layout>
+    </flex-layout>
+  </vueTemplate>
 </vueTemplates>
 <body onload="initPage()">
 <flex-layout id="screen" class="row flex-stretch full-size">
   <flex-layout class="col vscroll tool">
     <button @click="testInit">Re-Init</button>
     <button @click="changeLibrary">Change Library</button>
-    <button @click="all.audio.buffer.stop()">Stop Player</button>
+    <button @click="all.audio.player.stop()">Stop Player</button>
     <button @click="all.audio.player.playNext()">Play Next</button>
   </flex-layout>
   <flex-layout class="col vscroll flex-remain">

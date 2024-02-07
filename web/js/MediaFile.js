@@ -24,6 +24,21 @@ class MediaFile {
     g.loadedQueue.push(this);
     return this;
   }
+  async mediaTags() {
+    await this.load();
+    let c = triggerFactory();
+    window.jsmediatags.read(new Blob([this.data], {type: this.mimeType}),{
+      onSuccess:(tags)=>c.fire(tags),
+      onError:(e)=>c.cancel(e)
+    });
+    return c.promise;
+  }
+  async pop(field, popElement) {
+    this.popFocus = field;
+    this.preselect = this.metadata?.[field];
+    await Vue.nextTick();
+    popElement.focus();
+  }
   async register() {
     let tags = (await this.mediaTags()).tags; //TODO: wrap this in try block
     all.files[this.path] = {
@@ -50,24 +65,23 @@ class MediaFile {
         dataURL: canvas.toDataURL('image/jpeg', 0.99),
       };
       await http.post('/metadata/thumbnails', {dataset: {
-        [this.path]: all.thumbnails[this.path],
+        [this.path]: g.thumbnails[this.path],
       }});
     }
     
     await http.post('/metadata/files', {dataset: {
-      [this.path]: all.files[this.path],
+      [this.path]: g.files[this.path],
     }});
+  }
+  async setMetadata(key, value) {
+    g.metadata.touch(this.path, {path: this.path});
+    g.metadata[this.path][key] = value;
+    await http.post('/metadata/metadata', {dataset: {
+      [this.path]: g.metadata[this.path],
+    }});
+    delete this.popFocus;
   }
   async start(...args) {
     g.audio.player.playMediaFile(this, ...args);
-  }
-  async mediaTags() {
-    await this.load();
-    let c = triggerFactory();
-    window.jsmediatags.read(new Blob([this.data], {type: this.mimeType}),{
-      onSuccess:(tags)=>c.fire(tags),
-      onError:(e)=>c.cancel(e)
-    });
-    return c.promise;
   }
 }
