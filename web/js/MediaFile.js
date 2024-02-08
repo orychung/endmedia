@@ -4,6 +4,14 @@ class MediaFile {
   constructor(...args) {
     Object.assign(this, ...args);
   }
+  get qName() {
+    return (this.metadata?.quarter
+        || (this.fileInfo?.year?.undergo(x=>x.toString().padStart(4,'0').slice(2,4)+'Q0'))
+        || '00Q0');
+  }
+  get hue() {
+    return (91 * Array.from(this.qName).reduce((p,x)=>p*31 + x.codePointAt(0), 1)) % 360;
+  }
   get ext() {return this.filename.split('.').slice(1).at(-1).toUpperCase();}
   get filename() {return this.path.split(/[\/\\]/).at(-1);}
   get fileInfo() {return g.files[this.path];}
@@ -74,10 +82,13 @@ class MediaFile {
     }});
   }
   async setMetadata(key, value) {
-    g.metadata.touch(this.path, {path: this.path});
+    g.metadata.touch(this.path, {});
     g.metadata[this.path][key] = value;
     await http.post('/metadata/metadata', {dataset: {
-      [this.path]: g.metadata[this.path],
+      [this.path]: {
+        path: this.path,
+        metadata: JSON.stringify(g.metadata[this.path]),
+      }
     }});
     delete this.popFocus;
   }

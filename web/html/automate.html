@@ -41,6 +41,10 @@ box.performer {
   max-width: 200px;
   overflow: hidden;
 }
+box.pop {
+  padding: 5px;
+  background: white;
+}
 grid-heading > box {
   margin-right: 10px;
 }
@@ -61,6 +65,9 @@ grid-row:hover > :first-child::before {
 img.thumbnail {
   width: calc(80px / var(--device-pixel-ratio));
 }
+span.title {
+  font-weight: 700;
+}
 span.white {
   color: #FFF;
   text-shadow: 0 0 3px #333, 0 0 6px #333;
@@ -77,6 +84,16 @@ span.yellow {
   top: 100%;
   left: 0px;
   z-index: 10;
+}
+.metadata-quarter {
+  --color: hsla(var(--hue), 50%, 50%, 0.9);
+  border: 2px solid var(--color);
+  border-radius: 8px;
+  padding: 2px 4px;
+  line-height: 1em;
+  color: var(--color);
+  font-weight: 700;
+  font-size: 80%;
 }
 .title-metadata {
   align-items: flex-end;
@@ -124,7 +141,7 @@ g.audio.player = {
   },
   playNext() {
     const now = new Date().getTime();
-    let weights = g.ui.fileGrid.data.mapObject(x=>{
+    let weights = g.ui.fileData.mapObject(x=>{
       let weight = 1;
       let daysNotPlayed = (now - new Date(x.stats?.lastPlay || '1970-01-01').getTime())/86400000;
       weight *= 1.5 ** (x.metadata?.rating || 3);
@@ -135,7 +152,7 @@ g.audio.player = {
     });
     weights = weights.asPMF();
     g.debug.weights = weights;
-    g.ui.fileGrid.data[weights.sample()].start();
+    g.ui.fileData[weights.sample()].start();
   },
   stop() {
     g.audio.buffer.stop();
@@ -191,6 +208,11 @@ async function initData() {
   g.thumbnails = await http.get('/metadata/thumbnails');
   g.files = await http.get('/metadata/files');
   g.metadata = await http.get('/metadata/metadata');
+  g.metadata.convert(x=>{
+    if (x.metadata) x=JSON.parse(x.metadata);
+    delete x.path;
+    return x;
+  });
   g.stats = await http.get('/metadata/stats');
   g.automations = await http.get('/metadata/automations');
   g.libraries = {};
@@ -205,6 +227,7 @@ async function initData() {
     };
   }
   if (libraryList.length) all.ui.current.library = libraryList[0];
+  all.ui.fileData = all.libraries[all.ui.current.library].files;
   all.ui.fileGrid = {
     filterCond: {},
     filter: {
@@ -224,7 +247,9 @@ async function initData() {
       { heading: 'Title', template: 't-media-title' },
       { heading: 'Performer', display: d=>all.files[d.path]?.performer, 'class': 'performer' },
     ],
-    data: all.libraries[all.ui.current.library].files,
+    get data() {
+      return all.ui.fileData.mapArray().sortBy(x=>x.qName, true);
+    },
   };
 }
 
@@ -249,7 +274,8 @@ async function initData() {
   </vueTemplate>
   <vueTemplate id="t-media-title">
     <flex-layout class="col">
-      <span>{{ od.row.fileInfo.title || ('&lt;' +　od.row.path + '&gt;') }}</span>
+      <span class="title" :title="od.row.path"
+          >{{ od.row.fileInfo.title || ('&lt;' +　od.row.path + '&gt;') }}</span>
       <flex-layout class="row title-metadata">
         <span class="material-symbols-rounded pointer yellow"
           @click="od.row.pop('rating', $refs.ratingPop);">star</span>
@@ -263,6 +289,17 @@ async function initData() {
             @click="od.row.setMetadata('rating',i);">star</span>
         </flex-layout>
         <span>{{ od.row.metadata?.rating || 3 }}</span>
+        <span>&nbsp;&nbsp;</span>
+        <box class="metadata-quarter pointer"
+            :style="{'--hue': od.row.hue}"
+            @click="od.row.pop('quarter', $refs.quarterPop);">{{ od.row.qName }}</box>
+        <box class="absolute pop"
+            v-show="od.row.popFocus=='quarter'" tabindex="-1"
+            @focusout="delete od.row.popFocus;">
+          <input ref="quarterPop"
+              @change="od.row.setMetadata('quarter',$refs.quarterPop.value);"
+              :value="od.row.metadata?.quarter"></input>
+        </box>
       </flex-layout>
     </flex-layout>
   </vueTemplate>
