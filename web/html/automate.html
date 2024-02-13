@@ -127,6 +127,7 @@ g.audio.player = {
     this.history.push(mediaFile.path);
     if (this.history.length >= 3) this.uploadHistory();
     const stat = g.stats.touch(mediaFile.path, { path: mediaFile.path, playCount: 0 });
+    if (typeof stat.playCount == 'string') stat.playCount = parseInt(stat.playCount);
     stat.playCount += 1;
     stat.lastPlay = new Date().toISOString();
     
@@ -275,7 +276,7 @@ async function initData() {
   <vueTemplate id="t-media-title">
     <flex-layout class="col">
       <span class="title" :title="od.row.path"
-          >{{ od.row.fileInfo.title || ('&lt;' +　od.row.path + '&gt;') }}</span>
+          >{{ od.row.fileInfo?.title || ('&lt;' +　od.row.path + '&gt;') }}</span>
       <flex-layout class="row title-metadata">
         <span class="material-symbols-rounded pointer yellow"
           @click="od.row.pop('rating', $refs.ratingPop);">star</span>
