@@ -65,8 +65,8 @@ class MediaFile {
       let canvas = document.createElement('canvas');
       g.debug.canvas = canvas;
       await canvas.loadFile(url, {
-        height: THUMBNAIL_SIZE,
-        width: THUMBNAIL_SIZE,
+        maxHeight: THUMBNAIL_SIZE,
+        maxWidth: THUMBNAIL_SIZE,
       });
       all.thumbnails[this.path] = {
         path: this.path,

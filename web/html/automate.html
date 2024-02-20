@@ -15,7 +15,7 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/common/global.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/common/promise.js"></script>
 <script type="text/javascript" src="../../endfw/common/stat.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/client/canvas.js"></script>
+<script type="text/javascript" src="../../endfw/client/canvas.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/client/music.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/client/shortcuts.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/client/quick_vue.js"></script>
@@ -26,26 +26,26 @@ body {
   background: var(--theme-back);
   margin: 0px;
 }
-box {
+div {
   display: flex;
   gap: 0px;
 }
-box.thumbnail {
+div.thumbnail {
   align-self: flex-start;
 }
-box.action {
+div.action {
   margin-right: 10px;
 }
-box.performer {
+div.performer {
   font-size: 12px;
   max-width: 200px;
   overflow: hidden;
 }
-box.pop {
+div.pop {
   padding: 5px;
   background: white;
 }
-grid-heading > box {
+grid-heading > div {
   margin-right: 10px;
 }
 grid-layout {
@@ -63,10 +63,13 @@ grid-row:hover > :first-child::before {
   z-index: -10;
 }
 img.thumbnail {
+  max-height: calc(80px / var(--device-pixel-ratio));
   width: calc(80px / var(--device-pixel-ratio));
+  object-fit: scale-down;
 }
 span.title {
   font-weight: 700;
+  text-shadow: 1px 1px 3px #FFF;
 }
 span.white {
   color: #FFF;
@@ -85,6 +88,9 @@ span.yellow {
   left: 0px;
   z-index: 10;
 }
+.block {
+  display: block;
+}
 .metadata-quarter {
   --color: hsla(var(--hue), 50%, 50%, 0.9);
   border: 2px solid var(--color);
@@ -97,6 +103,8 @@ span.yellow {
 }
 .title-metadata {
   align-items: flex-end;
+  margin-left: -4px;
+  user-select: none;
 }
 </style>
 <script type="text/javascript" id="method">
@@ -105,13 +113,31 @@ Object.assign(Vue.endAddOn.commonMethods, {
     await http.get('/dev/loadDynamic');
     await http.get('/metadata/init');
   },
+  async testRead() {
+    return await http.post('/mediaFile/readFile',{library: Object.keys(all.libraries)[0], path: '[m3u]/1-year+5-star.m3u8'});
+  },
+  async testWrite() {
+    let data = await this.testRead();
+    return await http.post('/mediaFile/writeFile',{library: Object.keys(all.libraries)[0], path: '[m3u]/1-year+5-star-copy.m3u8', data});
+  },
   changeLibrary() {
     //TODO: define share-able UI for quick input
+  },
+  async formNYear(n) {
+    let date = new Date((new Date()).getTime() - n * 365 *　86400 * 1000);
+    let qName = this.qNameFromDate(date);
+    let data = all.ui.fileGrid.data.filter(x=>x.qName >= qName).map(x=>'..\\'+x.path).join('\n');
+    return await http.post('/mediaFile/writeFile',{library: Object.keys(all.libraries)[0], path: `[m3u]/${n}-years.m3u8`, data});
+  },
+  qNameFromDate(date) {
+    return `${date.getFullYear()%100}Q${Math.ceil(date.getMonth()/3)}`;
   },
 });
 </script>
 <script type="text/javascript" id="model">
-g.debug = {};
+g.debug = {
+  commonMethods:　Vue.endAddOn.commonMethods,
+};
 g.audio = {ctx: new AudioContext()};
 g.audio.buffer = new MusicalBuffer(g.audio.ctx);
 g.audio.player = {
@@ -193,8 +219,8 @@ async function initPage() {
     current: {},
   };
 
-  await Vue.endAddOn.loadTemplateURLs('https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/vue/control.xml');
-  //await Vue.endAddOn.loadTemplateURLs('../../endfw/vue/control.xml');
+  //await Vue.endAddOn.loadTemplateURLs('https://cdn.jsdelivr.net/gh/orychung/endfw@0.5.2/vue/control.xml');
+  await Vue.endAddOn.loadTemplateURLs('../../endfw/vue/control.xml');
   Vue.endAddOn.templates = Vue.endAddOn.templates.concat(Array.from($('vueTemplate')));
   Vue.endAddOn.createApp({
     mountSelectors: ['#screen'],
@@ -291,16 +317,17 @@ async function initData() {
         </flex-layout>
         <span>{{ od.row.metadata?.rating || 3 }}</span>
         <span>&nbsp;&nbsp;</span>
-        <box class="metadata-quarter pointer"
+        <div class="metadata-quarter pointer"
             :style="{'--hue': od.row.hue}"
-            @click="od.row.pop('quarter', $refs.quarterPop);">{{ od.row.qName }}</box>
-        <box class="absolute pop"
+            @click="od.row.pop('quarter', $refs.quarterPop);"
+            >{{ od.row.qName }}</div>
+        <div class="absolute pop"
             v-show="od.row.popFocus=='quarter'" tabindex="-1"
             @focusout="delete od.row.popFocus;">
           <input ref="quarterPop"
               @change="od.row.setMetadata('quarter',$refs.quarterPop.value);"
               :value="od.row.metadata?.quarter"></input>
-        </box>
+        </div>
       </flex-layout>
     </flex-layout>
   </vueTemplate>
@@ -309,12 +336,12 @@ async function initData() {
 <flex-layout id="screen" class="row flex-stretch full-size">
   <flex-layout class="col vscroll tool">
     <button @click="testInit">Re-Init</button>
-    <button @click="changeLibrary">Change Library</button>
     <button @click="all.audio.player.stop()">Stop Player</button>
     <button @click="all.audio.player.playNext()">Play Next</button>
+    <button v-show="false" @click="changeLibrary">Change Library</button>
   </flex-layout>
   <flex-layout class="col vscroll flex-remain">
-    <div v-if="all.ui.fileGrid">
+    <div class="block" v-if="all.ui.fileGrid">
       <span v-for="od in [all.ui.fileGrid.filterCond]">
         <label for="pathFilter">Path Filter</label>
         <input id="pathFilter" type="text" v-model="od.path"></input>
