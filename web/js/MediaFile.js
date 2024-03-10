@@ -1,16 +1,46 @@
 "use strict";
 
+class QuarterValue {
+  constructor(options = {}) {
+    if (Number.isInteger(options)) {
+      this.value = options;
+    } else if (!(options instanceof Object)) {
+      throw 'Integer or Object is expected';
+    } else if (options.name) {
+      this.year = parseInt(options.name.slice(0,2));
+      this.q = parseInt(options.name.slice(3,4));
+      this.value = this.year * 4 + this.q;
+    } else if (options.value) {
+      this.value = options.value;
+    } else {
+      let date = options.date || new Date();
+      this.year = (options.year && options.year - 2000) || date.getYear() - 100;
+      this.q = options.q || Math.ceil(date.getMonth() / 4);
+      this.value = this.year * 4 + this.q;
+    }
+    if (this.year === undefined) this.year = Math.floor(this.value/4);
+    if (this.q === undefined) this.q = this.value%4;
+    this.name = `${this.year.toString().padStart(2,'0')}Q${this.q}`;
+    return;
+  }
+  get qAge() {
+    return new QuarterValue().value - this.value;
+  }
+  get hue() {
+    return (100 - 91 * this.value) % 360;
+  }
+}
+
 class MediaFile {
   constructor(...args) {
     Object.assign(this, ...args);
   }
-  get qName() {
-    return (this.metadata?.quarter
-        || (this.fileInfo?.year?.undergo(x=>x.toString().padStart(4,'0').slice(2,4)+'Q0'))
-        || '00Q0');
-  }
-  get hue() {
-    return (91 * Array.from(this.qName).reduce((p,x)=>p*31 + x.codePointAt(0), 1)) % 360;
+  get q() {
+    return new QuarterValue({
+      name: this.metadata?.quarter,
+      year: this.fileInfo?.year,
+      q: 0
+    });
   }
   get ext() {return this.filename.split('.').slice(1).at(-1).toUpperCase();}
   get filename() {return this.path.split(/[\/\\]/).at(-1);}

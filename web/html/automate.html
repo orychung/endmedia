@@ -123,14 +123,13 @@ Object.assign(Vue.endAddOn.commonMethods, {
   changeLibrary() {
     //TODO: define share-able UI for quick input
   },
-  async formNYear(n) {
-    let date = new Date((new Date()).getTime() - n * 365 *　86400 * 1000);
-    let qName = this.qNameFromDate(date);
-    let data = all.ui.fileGrid.data.filter(x=>x.qName >= qName).map(x=>'..\\'+x.path).join('\n');
+  async formNYear(n, minRating=3) {
+    let data =
+      all.ui.fileGrid.data
+      .filter(x=>x.q.qAge <= n*4)
+      .filter(x=>(x.metadata.rating || 3) >= minRating)
+      .map(x=>'..\\'+x.path).join('\n');
     return await http.post('/mediaFile/writeFile',{library: Object.keys(all.libraries)[0], path: `[m3u]/${n}-years.m3u8`, data});
-  },
-  qNameFromDate(date) {
-    return `${date.getFullYear()%100}Q${Math.ceil(date.getMonth()/3)}`;
   },
 });
 </script>
@@ -170,8 +169,9 @@ g.audio.player = {
     const now = new Date().getTime();
     let weights = g.ui.fileData.mapObject(x=>{
       let weight = 1;
-      let daysNotPlayed = (now - new Date(x.stats?.lastPlay || '1970-01-01').getTime())/86400000;
-      weight *= 1.5 ** (x.metadata?.rating || 3);
+      let daysNotPlayed = (now - new Date(x.stats?.lastPlay ?? '1970-01-01').getTime())/86400000;
+      weight *= 1.6 ** (x.metadata?.rating ?? 3);
+      weight *= 0.7 ** Math.min(8, x.q.qAge ?? 2);
       weight *= Math.min(4, daysNotPlayed + 1);
       weight *= Math.min(1, daysNotPlayed * 3);
       weight *= Math.min(1, daysNotPlayed * 8);
@@ -275,7 +275,7 @@ async function initData() {
       { heading: 'Performer', display: d=>all.files[d.path]?.performer, 'class': 'performer' },
     ],
     get data() {
-      return all.ui.fileData.mapArray().sortBy(x=>x.qName, true);
+      return all.ui.fileData.mapArray().sortBy(x=>x.q.name, true);
     },
   };
 }
@@ -318,9 +318,9 @@ async function initData() {
         <span>{{ od.row.metadata?.rating || 3 }}</span>
         <span>&nbsp;&nbsp;</span>
         <div class="metadata-quarter pointer"
-            :style="{'--hue': od.row.hue}"
+            :style="{'--hue': od.row.q.hue}"
             @click="od.row.pop('quarter', $refs.quarterPop);"
-            >{{ od.row.qName }}</div>
+            >{{ od.row.q.name }}</div>
         <div class="absolute pop"
             v-show="od.row.popFocus=='quarter'" tabindex="-1"
             @focusout="delete od.row.popFocus;">
