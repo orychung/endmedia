@@ -150,11 +150,11 @@ g.audio.player = {
     await mediaFile.load();
     
     this.history.push(mediaFile.path);
-    if (this.history.length >= 3) this.uploadHistory();
     const stat = g.stats.touch(mediaFile.path, { path: mediaFile.path, playCount: 0 });
     if (typeof stat.playCount == 'string') stat.playCount = parseInt(stat.playCount);
     stat.playCount += 1;
     stat.lastPlay = new Date().toISOString();
+    if (this.history.length >= 3) this.uploadHistory();
     
     g.audio.buffer.stop();
     this.donePlay('stopped');
@@ -172,9 +172,9 @@ g.audio.player = {
       let daysNotPlayed = (now - new Date(x.stats?.lastPlay ?? '1970-01-01').getTime())/86400000;
       weight *= 1.6 ** (x.metadata?.rating ?? 3);
       weight *= 0.7 ** Math.min(8, x.q.qAge ?? 2);
-      weight *= Math.min(4, daysNotPlayed + 1);
-      weight *= Math.min(1, daysNotPlayed * 3);
-      weight *= Math.min(1, daysNotPlayed * 8);
+      weight *= Math.min(4, daysNotPlayed + 1) ** 2;
+      weight *= Math.min(1, daysNotPlayed * 3) ** 3;
+      weight *= Math.min(1, daysNotPlayed * 8) ** 2;
       return weight;
     });
     weights = weights.asPMF();
