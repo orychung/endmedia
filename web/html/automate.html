@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/vue/layout.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.3/vue/layout.css" />
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/vue/control.css" />
 <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.8/dist/jsmediatags.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/lib/jquery.js"></script>
@@ -17,19 +17,10 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/common/stat.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/client/canvas.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/client/music.js" charset="utf-8"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/client/shortcuts.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/client/quick_vue.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.3/client/shortcuts.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.3/client/quick_vue.js"></script>
 <script type="text/javascript" src="../js/MediaFile.js"></script>
 <style>
-body {
-  color: var(--theme-fore);
-  background: var(--theme-back);
-  margin: 0px;
-}
-div {
-  display: flex;
-  gap: 0px;
-}
 div.thumbnail {
   align-self: flex-start;
 }
@@ -59,13 +50,30 @@ grid-row:hover > :first-child::before {
   width: 100vw;
   position: absolute;
   left: 0px; right: 0px;
-  background: linear-gradient(to bottom, #EEE, transparent);
+  /* background: linear-gradient(to bottom, #EEE, transparent); */
+  background: conic-gradient(
+    from 0deg at 0% 50px,
+    transparent 0deg,
+    rgb(240 240 240 / 0.4) 20deg,
+    rgb(240 240 240 / 0.9) 50deg,
+    rgb(240 240 240 / 0.5) 80deg,
+    transparent 90deg);
   z-index: -10;
 }
 img.thumbnail {
   max-height: calc(80px / var(--device-pixel-ratio));
   width: calc(80px / var(--device-pixel-ratio));
   object-fit: scale-down;
+}
+screen-layer.player-image > .flex {
+  position: absolute;
+  right: 0px;
+  bottom: 0px;
+}
+screen-layer.player-image > .flex > img {
+  max-height: 100vh;
+  max-width: 100vw;
+  opacity: 0.5;
 }
 span.title {
   font-weight: 700;
@@ -79,17 +87,11 @@ span.yellow {
   color: #ED3;
   text-shadow: 0 0 3px #FFF, 0 0 6px #FFF;
 }
-#screen {
-  height: 100vh;
-  width: 100vw;
-}
 .absolute.pop {
   top: 100%;
   left: 0px;
   z-index: 10;
-}
-.block {
-  display: block;
+  border-radius: 8px;
 }
 .metadata-quarter {
   --color: hsla(var(--hue), 50%, 50%, 0.9);
@@ -144,7 +146,7 @@ g.audio.player = {
   donePlay(type) {
     document.title = 'Automate';
     this.currentPlay?.fire(type);
-    delete this.currentPlay;
+    delete all.audio.player.currentPlay;
   },
   async playMediaFile(mediaFile, ...args) {
     await mediaFile.load();
@@ -156,12 +158,22 @@ g.audio.player = {
     stat.lastPlay = new Date().toISOString();
     if (this.history.length >= 3) this.uploadHistory();
     
+    (async ()=>{
+      delete all.audio.player.imageDataURL;
+      let tags = (await mediaFile.mediaTags()).tags;
+      if (tags.picture) {
+        let blob = new Blob([new Uint8Array(tags.picture.data)],{type: tags.picture.format});
+        //let url = URL.createObjectURL(blob);
+        all.audio.player.imageDataURL = URL.createObjectURL(blob);
+      }
+    })();
+    
     g.audio.buffer.stop();
     this.donePlay('stopped');
     await g.audio.buffer.load(mediaFile.data.slice());
     g.audio.buffer.restart(...args);
     
-    this.currentPlay = triggerFactory();
+    all.audio.player.currentPlay = triggerFactory();
     document.title = 'Automate: Playing ' + g.files[mediaFile.path].title;
     await this.currentPlay.promise;
   },
@@ -300,13 +312,13 @@ async function initData() {
       title="Log Info">info</span>
   </vueTemplate>
   <vueTemplate id="t-media-title">
-    <flex-layout class="col">
+    <div class="flex col">
       <span class="title" :title="od.row.path"
           >{{ od.row.fileInfo?.title || ('&lt;' +　od.row.path + '&gt;') }}</span>
-      <flex-layout class="row title-metadata">
+      <div class="flex row title-metadata">
         <span class="material-symbols-rounded pointer yellow"
           @click="od.row.pop('rating', $refs.ratingPop);">star</span>
-        <flex-layout ref="ratingPop" class="row absolute pop"
+        <div ref="ratingPop" class="flex row absolute pop"
             v-show="od.row.popFocus=='rating'" tabindex="-1"
             @focusout="delete od.row.popFocus;">
           <span class="material-symbols-rounded pointer"
@@ -314,7 +326,7 @@ async function initData() {
             :class="{white:!(od.row.preselect>=i),yellow:(od.row.preselect>=i)}"
             @mouseover="od.row.preselect=i"
             @click="od.row.setMetadata('rating',i);">star</span>
-        </flex-layout>
+        </div>
         <span>{{ od.row.metadata?.rating || 3 }}</span>
         <span>&nbsp;&nbsp;</span>
         <div class="metadata-quarter pointer"
@@ -328,19 +340,25 @@ async function initData() {
               @change="od.row.setMetadata('quarter',$refs.quarterPop.value);"
               :value="od.row.metadata?.quarter"></input>
         </div>
-      </flex-layout>
-    </flex-layout>
+      </div>
+    </div>
   </vueTemplate>
 </vueTemplates>
 <body onload="initPage()">
-<flex-layout id="screen" class="row flex-stretch full-size">
-  <flex-layout class="col vscroll tool">
+<div id="screen" class="flex">
+  <screen-layer class="player-image full-size" style="--base-z-index:-20;">
+    <div class="flex row" v-if="all.audio.player.currentPlay">
+      <img v-for="opac in [0.25,0.375,0.5]" :style="{opacity:opac}" :src="all.audio.player.imageDataURL"></img>
+    </div>
+  </screen-layer>
+  <screen-layer class="flex row flex-stretch full-size">
+  <div class="flex col scroll-v tool">
     <button @click="testInit">Re-Init</button>
     <button @click="all.audio.player.stop()">Stop Player</button>
     <button @click="all.audio.player.playNext()">Play Next</button>
     <button v-show="false" @click="changeLibrary">Change Library</button>
-  </flex-layout>
-  <flex-layout class="col vscroll flex-remain">
+  </div>
+  <div class="flex col scroll-v flex-remain">
     <div class="block" v-if="all.ui.fileGrid">
       <span v-for="od in [all.ui.fileGrid.filterCond]">
         <label for="pathFilter">Path Filter</label>
@@ -350,12 +368,13 @@ async function initData() {
       </span>
       <t-list-grid :od="all.ui.fileGrid" :all="all"></t-list-grid>
     </div>
-  </flex-layout>
+  </div>
+  </screen-layer>
   <screen-layer style="--base-z-index:20;">
     <t-cover :all="all"></t-cover>
     <t-contextmenu :all="all" :w="all.ui.contextmenus"></t-contextmenu>
   </screen-layer>
-</flex-layout>
+</div>
 </body>
 <script type="text/javascript" id="script-after-body">
 document.body.style.setProperty('--device-pixel-ratio', devicePixelRatio);

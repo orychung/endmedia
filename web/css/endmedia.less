@@ -11,12 +11,24 @@
   --theme-back: #DDD;
 }
 
-/*Shortcuts*/
+/*class Shortcuts*/
 .absolute {
   position: absolute;
 }
 
+/*id Shortcuts*/
+#screen {
+  position: absolute;
+  height: 100vh;
+  width: 100vw;
+}
+
 /*Builtin Tags*/
+body {
+  color: var(--theme-fore);
+  background: var(--theme-back);
+  margin: 0px;
+}
 button {
   font-weight: bold;
   color: var(--theme-back);
@@ -25,4 +37,20 @@ button {
   margin: 2px;
   padding: 8px;
   border-radius: 5px;
+}
+div {
+  display: flex;
+  gap: 0px;
+}
+
+/*Custom Tags*/
+screen-layer {
+  pointer-events: none;
+  & > * {
+    pointer-events: initial;
+  }
+  z-index: var(--base-z-index);
+  position: absolute;
+  height: 100vh;
+  width: 100vw;
 }
