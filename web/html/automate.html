@@ -6,19 +6,18 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.3/vue/layout.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/vue/control.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.0/vue/layout.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.0/vue/control.css" />
 <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.8/dist/jsmediatags.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/lib/jquery.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/lib/vue.global.prod.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/common/builtin.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/common/global.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/common/promise.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.0/lib/vue.global.prod.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.0/common/builtin.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.0/common/global.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.0/common/promise.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/common/stat.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/client/canvas.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/client/music.js" charset="utf-8"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.3/client/shortcuts.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.3/client/quick_vue.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.0/client/canvas.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.0/client/music.js" charset="utf-8"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.0/client/shortcuts.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.0/client/quick_vue.js"></script>
 <script type="text/javascript" src="../js/MediaFile.js"></script>
 <style>
 div.thumbnail {
@@ -231,10 +230,9 @@ async function initPage() {
     current: {},
   };
 
-  await Vue.endAddOn.loadTemplateURLs('https://cdn.jsdelivr.net/gh/orychung/endfw@0.6.0/vue/control.xml');
-  //await Vue.endAddOn.loadTemplateURLs('../../endfw/vue/control.xml');
-  Vue.endAddOn.templates = Vue.endAddOn.templates.concat(Array.from($('vueTemplate')));
-  Vue.endAddOn.createApp({
+  Vue.endAddOn.useBasicMethods();
+  await Vue.endAddOn.load();
+  window.apps = Vue.endAddOn.createApp({
     mountSelectors: ['#screen'],
   });
 
@@ -381,7 +379,7 @@ document.body.style.setProperty('--device-pixel-ratio', devicePixelRatio);
 window.addEventListener('resize',e=>{
   document.body.style.setProperty('--device-pixel-ratio', devicePixelRatio);
 });
-window.onunload = function(e) {
+window.onbeforeunload = function(e) {
   console.log(e);
   g.audio.player.uploadHistory();
 };
