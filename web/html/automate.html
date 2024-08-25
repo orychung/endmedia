@@ -3,22 +3,23 @@
 <head>
 <title>Automate</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="icon" type="image/svg+xml" href="https://cdn.jsdelivr.net/gh/FortAwesome/Font-Awesome@6.6.0/svgs/solid/music.svg" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.2/vue/layout.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.2/vue/control.css" />
-<script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.8/dist/jsmediatags.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.2/lib/vue.global.prod.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.2/common/builtin.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.2/common/global.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.2/common/promise.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.2/common/stat.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.2/client/canvas.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.2/client/modal.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.2/client/music.js" charset="utf-8"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.2/client/shortcuts.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.2/client/quick_vue.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/vue/layout.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/vue/control.css" />
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jsmediatags@3.8/dist/jsmediatags.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/lib/vue.global.prod.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/common/builtin.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/common/global.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/common/promise.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/common/stat.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/client/canvas.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/client/modal.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/client/music.js" charset="utf-8"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/client/shortcuts.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/client/quick_vue.js"></script>
 <script type="text/javascript" src="../js/MediaFile.js"></script>
 <script type="text/javascript" src="../js/staticModals.js"></script>
 <style id="vue-head">
@@ -31,6 +32,25 @@ div.thumbnail {
 div.action {
   margin-right: 10px;
 }
+div.filter-bar {
+  --base-font-size: 12px;
+  > div {
+    background: var(--theme-fore);
+    color: var(--theme-back);
+    margin: 2px;
+    border-radius: 8px;
+    padding: 3px;
+    align-items: center;
+    > label {
+      > span {font-size: 18px;}
+      > input {
+        margin-left: 3px;
+        background: var(--theme-back);
+      }
+    }
+    > span {font-size: 16px;}
+  }
+}
 div.performer {
   font-size: 12px;
   max-width: 200px;
@@ -38,13 +58,25 @@ div.performer {
 }
 div.pop {
   padding: 5px;
-  background: var(--theme-glow);
+  background: hsl(var(--theme-glow-hsl),.8);
 }
 div.tool {
   padding: 2px;
   > button {
     color: var(--theme-back);
-    background: var(--theme-fore);
+    background: hsla(var(--theme-hs),17%,.9);
+  }
+}
+div.toolbox {
+  min-width: 80px;
+  border-radius: 8px;
+  padding: 8px;
+  row-gap: 8px;
+  color: var(--theme-back);
+  background: hsla(var(--theme-hs),17%,.9);
+  align-items: center;
+  img {
+    border-radius: 8px;
   }
 }
 grid-heading > div {
@@ -187,6 +219,7 @@ g.audio.player = {
     
     all.audio.player.currentPlay = triggerFactory();
     document.title = 'Automate: Playing ' + g.files[mediaFile.path].title;
+    this.currentMediaFile = mediaFile;
     await this.currentPlay.promise;
   },
   playNext() {
@@ -289,13 +322,21 @@ async function initData() {
   all.ui.fileGrid = {
     filterCond: {},
     filter: {
-      path: d=>{
-        if (!all.ui.fileGrid.filterCond.path) return true;
-        return g.files[d.path]?.path?.toLowerCase().includes(all.ui.fileGrid.filterCond.path.toLowerCase());
+      title: d=>{
+        if (!all.ui.fileGrid.filterCond.title) return true;
+        return g.files[d.path]?.title?.toLowerCase().includes(all.ui.fileGrid.filterCond.title.toLowerCase());
       },
       performer: d=>{
         if (!all.ui.fileGrid.filterCond.performer) return true;
         return g.files[d.path]?.performer?.toLowerCase().includes(all.ui.fileGrid.filterCond.performer.toLowerCase());
+      },
+      quarter: d=>{
+        if (!all.ui.fileGrid.filterCond.quarter) return true;
+        return g.metadata[d.path]?.quarter?.toLowerCase().includes(all.ui.fileGrid.filterCond.quarter.toLowerCase());
+      },
+      star: d=>{
+        if (!all.ui.fileGrid.filterCond.star) return true;
+        return g.metadata[d.path]?.rating == all.ui.fileGrid.filterCond.star;
       },
     },
     sorting: {},
@@ -314,13 +355,37 @@ async function initData() {
 </script>
 </head>
 <vueTemplates>
+  <vueTemplate id="t-filter-bar">
+    <div class="flex row filter-bar" v-for="cond in [all.ui.fileGrid.filterCond]">
+      <div v-if="cond.title!=null">
+        <label>title<input name="title" type="text" v-model="cond.title" size="5"></input></label>
+        <t-icon-button @click="cond.title=undefined" :od="{icon:'close'}"></t-icon-button>
+      </div>
+      <div v-if="cond.performer!=null">
+        <label>performer<input name="performer" type="text" v-model="cond.performer" size="5"></input></label>
+        <t-icon-button @click="cond.performer=undefined" :od="{icon:'close'}"></t-icon-button>
+      </div>
+      <div v-if="cond.quarter!=null">
+        <label>quarter<input name="quarter" type="text" v-model="cond.quarter" size="3"></input></label>
+        <t-icon-button @click="cond.quarter=undefined" :od="{icon:'close'}"></t-icon-button>
+      </div>
+      <div v-if="cond.star!=null">
+        <label>
+          <span class="material-symbols-rounded pointer yellow">star</span>
+          <input name="star" type="number" v-model="cond.star" min="1" max="7"></input>
+        </label>
+        <t-icon-button @click="cond.star=undefined" :od="{icon:'close'}"></t-icon-button>
+      </div>
+    </div>
+  </vueTemplate>
   <vueTemplate id="t-icon-button">
     <span class="material-symbols-outlined pointer" :title="od.title">{{ od.icon }}</span>
   </vueTemplate>
   <vueTemplate id="t-media-thumbnail">
-    <img v-for="img in [all.thumbnails[od.row.path]].filter(x=>x)"
-      :src='img.dataURL' class="thumbnail"></img>
-    <div style="height: 40px; width: 0px;"></div>
+    <div v-if="od.row" style="min-height: 40px;">
+      <img v-for="img in [all.thumbnails[od.row.path]].filter(x=>x)"
+        :src='img.dataURL' class="thumbnail"></img>
+    </div>
   </vueTemplate>
   <vueTemplate id="t-media-actions">
     <t-icon-button @click="od.row.start()" :od="{title:'Play',icon:'play_arrow'}"></t-icon-button>
@@ -375,18 +440,18 @@ async function initData() {
   </screen-layer>
   <screen-layer class="flex row flex-stretch full-size">
   <div class="flex col scroll-v tool">
-    <button @click="all.audio.player.stop()">Stop Player</button>
-    <button @click="all.audio.player.playNext()">Play Next</button>
-    <button v-show="false" @click="changeLibrary">Change Library</button>
+    <div class="flex col toolbox">
+      <t-media-thumbnail :all="all" :od="{row:all.audio.player.currentMediaFile}"></t-media-thumbnail>
+      <div class="flex row">
+        <t-icon-button @click="all.audio.player.stop()" :od="{title:'Stop Player',icon:'stop_circle'}"></t-icon-button>
+        <t-icon-button @click="all.audio.player.playNext()" :od="{title:'Play Next',icon:'skip_next'}"></t-icon-button>
+        <t-icon-button v-show="false" @click="changeLibrary" :od="{title:'Change Library',icon:'dictionary'}"></t-icon-button>
+      </div>
+    </div>
   </div>
   <div class="flex col scroll-v flex-remain">
     <div class="block" v-if="all.ui.fileGrid">
-      <span v-for="od in [all.ui.fileGrid.filterCond]">
-        <label for="pathFilter">Path Filter</label>
-        <input id="pathFilter" type="text" v-model="od.path"></input>
-        <label for="performerFilter">Performer Filter</label>
-        <input id="performerFilter" type="text" v-model="od.performer"></input>
-      </span>
+      <t-filter-bar :all="all"></t-filter-bar>
       <t-list-grid :od="all.ui.fileGrid" :all="all"></t-list-grid>
     </div>
   </div>

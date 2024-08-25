@@ -7,15 +7,17 @@
 }
 :root {
   --base-font-size: 14px;
-  --theme-fore: #333;
-  --theme-back: #DDD;
-  --theme-glow: white;
+  --theme-hs: 0,0%;
+  --theme-fore: hsl(var(--theme-hs),20%);
+  --theme-back: hsl(var(--theme-hs),85%);
+  --theme-glow-hsl: 0,0%,100%;
+  --theme-glow: hsl(var(--theme-glow-hsl));
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --theme-fore: #DDD;
     --theme-back: #333;
-    --theme-glow: black;
+    --theme-glow-hsl: 0,0%,0%;
   }
 }
 
@@ -31,7 +33,7 @@
   width: 100vw;
 }
 
-/*Builtin Tags*/
+/*Tags*/
 body {
   color: var(--theme-fore);
   background: var(--theme-back);
@@ -49,15 +51,12 @@ div {
   display: flex;
   gap: 0px;
 }
-
-/*Custom Tags*/
-screen-layer {
-  pointer-events: none;
-  & > * {
-    pointer-events: initial;
-  }
-  z-index: var(--base-z-index);
-  position: absolute;
-  height: 100vh;
-  width: 100vw;
+grid-row {
+  contain: content;
+}
+input {
+  border-radius: 5px;
+}
+label {
+  display: contents;
 }
