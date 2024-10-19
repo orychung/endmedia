@@ -212,8 +212,8 @@ g.audio.player = {
       let oldFactor = Math.max(3, x.q.qAge ?? 2) / 4;
       weight *= 1.6 ** (x.metadata?.rating ?? 3);
       weight *= 0.8 ** oldFactor;
-      weight *= Math.min(4, daysNotPlayed + 1) ** 2;
-      weight *= Math.min(1, daysNotPlayed * 2 / oldFactor) ** 3;
+      weight *= Math.min(8 / oldFactor ** .5, daysNotPlayed + 1);
+      weight *= Math.min(1, daysNotPlayed * 3) ** 2;
       weight *= Math.min(1, daysNotPlayed * 8) ** 2;
       return weight;
     });
