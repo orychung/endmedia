@@ -25,6 +25,12 @@
 .absolute {
   position: absolute;
 }
+.absolute.pop {
+  top: 100%;
+  left: 0px;
+  z-index: 10;
+  border-radius: 8px;
+}
 
 /*id Shortcuts*/
 #screen {
@@ -59,4 +65,16 @@ input {
 }
 label {
   display: contents;
+}
+span.title {
+  font-weight: 700;
+  text-shadow: 1px 1px 3px var(--theme-glow);
+}
+span.white {
+  color: #FFF;
+  text-shadow: 0 0 3px #333, 0 0 6px #333;
+}
+span.yellow {
+  color: #ED3;
+  text-shadow: 0 0 3px #FFF, 0 0 6px #FFF;
 }
