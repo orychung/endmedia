@@ -2,6 +2,7 @@
 //main.js for node.js server start
 const path = require('path');
 globalThis.endfw = require('endfw');
+endfw.builtin.initMore.sql();
 
 const PROJECT = 'endmedia';
 g.rootPath = path.resolve()+'/..';

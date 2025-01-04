@@ -7,19 +7,19 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/vue/layout.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/vue/control.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/vue/layout.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/vue/control.css" />
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jsmediatags@3.8/dist/jsmediatags.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/lib/vue.global.prod.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/common/builtin.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/common/global.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/common/promise.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/common/stat.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/client/canvas.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/client/modal.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/client/music.js" charset="utf-8"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/client/shortcuts.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.5/client/quick_vue.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/lib/vue.global.prod.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/common/builtin.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/common/global.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/common/promise.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/common/stat.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/canvas.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/modal.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/music.js" charset="utf-8"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/shortcuts.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/quick_vue.js"></script>
 <script type="text/javascript" src="../js/MediaFile.js"></script>
 <script type="text/javascript" src="../js/staticModals.js"></script>
 <style id="vue-head">
@@ -61,6 +61,7 @@ div.pop {
   background: hsl(var(--theme-glow-hsl),.8);
 }
 div.tool {
+  flex-shrink: 0;
   padding: 2px;
   > button {
     color: var(--theme-back);
@@ -135,30 +136,34 @@ screen-layer.player-image > .flex {
 }
 </style>
 <script type="text/javascript" id="method">
+builtin_initMore.sql();
 async function testInit() {
   await http.get('/dev/loadDynamic');
   await initData();
-}
+};
+async function formNYear(maxYear, minRating) {
+  if (maxYear instanceof Array) return maxYear.map(maxYear=>formNYear(maxYear, minRating)).done();
+  if (minRating instanceof Array) return minRating.map(minRating=>formNYear(maxYear, minRating)).done();
+  let data =
+    all.ui.fileGrid.data
+    .filter(x=>x.q.qAge <= maxYear*4)
+    .filter(x=>(x.metadata.rating || 3) >= minRating)
+    .map(x=>'..\\'+x.path).join('\n');
+  return await http.post('/mediaFile/writeFile',{library: Object.keys(all.libraries)[0], path: `[m3u]/${maxYear}-year-${minRating}+star.m3u8`, data});
+};
 Object.assign(Vue.endAddOn.commonMethods, {
   testInit: testInit,
   async testRead() {
-    return await http.post('/mediaFile/readFile',{library: Object.keys(all.libraries)[0], path: '[m3u]/1-year+5-star.m3u8'});
+    return await http.post('/mediaFile/readFile',{library: Object.keys(all.libraries)[0], path: '[m3u]/2-year-4+star.m3u8'});
   },
   async testWrite() {
     let data = await this.testRead();
-    return await http.post('/mediaFile/writeFile',{library: Object.keys(all.libraries)[0], path: '[m3u]/1-year+5-star-copy.m3u8', data});
+    return await http.post('/mediaFile/writeFile',{library: Object.keys(all.libraries)[0], path: '[m3u]/2-year-4+star-copy.m3u8', data});
   },
   changeLibrary() {
     //TODO: define share-able UI for quick input
   },
-  async formNYear(n, minRating=3) {
-    let data =
-      all.ui.fileGrid.data
-      .filter(x=>x.q.qAge <= n*4)
-      .filter(x=>(x.metadata.rating || 3) >= minRating)
-      .map(x=>'..\\'+x.path).join('\n');
-    return await http.post('/mediaFile/writeFile',{library: Object.keys(all.libraries)[0], path: `[m3u]/${n}-years.m3u8`, data});
-  },
+  formNYear: formNYear,
 });
 </script>
 <script type="text/javascript" id="model">
@@ -247,7 +252,10 @@ g.loadedQueue.push = function push(file) {
   let foundIndex = this.indexOf(file);
   if (foundIndex > -1) this.splice(foundIndex,1);
   Array.prototype.push.call(this, file);
-  let unloadList = this.splice(0, this.length - KEEP_SIZE);
+  this.shift(this.length - KEEP_SIZE);
+}
+g.loadedQueue.shift = function shift(n) {
+  let unloadList = this.splice(0, n);
   unloadList.forEach(x=>delete x.data);
 }
 </script>
@@ -262,7 +270,9 @@ async function initPage() {
     topContext: {
       menuButtons: [
         {text: 'Re-Init', click: ()=>testInit()},
+        {text: 'Generate m3u', click: ()=>formNYear([1,2,3,6,10],[3,4,5,6])},
         {text: 'Set Filter', click: ()=>g.staticModals.gridFilter.show()},
+        {text: 'Player Configuration', click: ()=>g.staticModals.playerConfig.show()},
       ],
     }
   };

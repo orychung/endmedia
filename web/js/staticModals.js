@@ -22,5 +22,18 @@ g.staticModals = {
       }
     ],
     ondismiss() {delete this.od;},
-  })
+  }),
+  playerConfig: new ModalScreen({
+    caption: 'Player Configuration',
+    fields: {
+      volume: {name: 'Volume', type: 'range', min: 0, max: 100},
+    },
+    od: {
+      get volume() {return Math.round(all.audio.buffer.gain.gain.value * 100);},
+      set volume(value) {return all.audio.buffer.gain.gain.value = value / 100;},
+    },
+    actions: [
+      ModalScreen.ACTION.CLOSE,
+    ],
+  }),
 };
