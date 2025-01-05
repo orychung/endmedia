@@ -1,0 +1,21 @@
+
+span-lyrics {
+  * {--base-font-size: 5.5vh;}
+  display: block;
+  bottom: 0px;
+  right: 0px;
+  margin: 10vh 10vw;
+  padding: 0px 0px;
+  font-weight: 600;
+  font-family: "BIZ UDGothic";
+  color: white;
+  overflow: hidden;
+  white-space: nowrap;
+  direction: rtl;
+  &.done {
+    color: var(--lyrics-color);
+    text-shadow: .2vw .2vh 1vw rgba(0,0,0,1);
+    margin: 0px 0px;
+    padding: 10vh 10vw;
+  }
+}
