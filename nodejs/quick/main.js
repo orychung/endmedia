@@ -34,6 +34,7 @@ g.server = new endfw.server.Server({
 //g.server.fileInventories.default.paths = [`${g.rootPath}/nodejs/node_modules/endmedia`];
 g.server.fileInventories.default.paths = [`${g.rootPath}`]; //special case working for dev or direct deployment
 g.server.fileInventories.asset = { paths: ['./asset'] };
+g.server.fileInventories.systemRoot = { paths: [''] };
 g.server.logTypes = {
   "0": {"format":"[T:h:m:s.:ms]"}, //general request
   "1": {"format":"[:Y4:M:DT:h:m:s.:ms]"}, //server changes
@@ -58,6 +59,12 @@ mainRoute.use(function webFiles(req, res, next) {
   let ret = res.returner;
   let url = req.parsedUrl;
   if (url.seg(0) == 'favicon.ico') return ret.file('/favicon.png', 'image/png');
+  if (url.seg(0) in g.serviceConfig.data.repos) {
+    return ret.file([
+      'systemRoot',
+      g.serviceConfig.data.repos[url.seg(0)].path + decodeURIComponent(url.remainingPath(1))
+    ]);
+  }
   if (url.seg(0) != 'web') return ret.jsonMsg.methodNotFound();
   if (url.seg(1) == 'html') {
     ret.fillVariable('buildHash', 1);

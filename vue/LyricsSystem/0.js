@@ -66,6 +66,7 @@ class LyricsTrail {
   async refreshRemainWidth() {
     if (!this.line.vnode) return;
     let refs = this.line.vnode.$refs;
+    if (!refs.widthFrom) return;
     let widthFrom = refs.widthFrom.offsetWidth;
     let widthTo = refs.widthTo.offsetWidth;
     if (!this.ruby.lineStarted) return delete this.remainWidth;
@@ -84,22 +85,38 @@ class LyricsTrail {
   }
 }
 class LyricsSystem {
+  static linkedLyrics = Symbol('linkedLyrics')
+  static linkedLyricsInterval = Symbol('linkedLyricsInterval')
+  static linkBufferToLyrics(buffer, lyrics) {
+    const {linkedLyrics, linkedLyricsInterval} = LyricsSystem;
+    if (!buffer[linkedLyrics]) {
+      buffer.addEventListener('started', ()=>{
+        buffer[linkedLyricsInterval] = setInterval(()=>{
+          if (!buffer[linkedLyrics]) return;
+          buffer[linkedLyrics].reactive.updateDisplay(buffer.playbackTime);
+        },20);
+        console.log('setInterval for:', buffer[linkedLyricsInterval]);
+      });
+      buffer.addEventListener('stopped', ()=>{
+        console.log('clearInterval for:', buffer[linkedLyricsInterval]);
+        clearInterval(buffer[linkedLyricsInterval])
+      });
+    }
+    buffer[linkedLyrics] = lyrics;
+  }
   trails = []
   constructor(o) {
     Object.assign(this,o);
     this.lines = this.lines.map(line=>new LyricsLine(line));
-    this.buffer.addEventListener('started', ()=>{
-      this.updateIntervalIndex = setInterval(()=>{
-        this.reactive.updateDisplay();
-      },20)
-    });
-    this.buffer.addEventListener('stopped', ()=>{
-      if (this.updateIntervalIndex) clearInterval(this.updateIntervalIndex);
-      delete this.updateIntervalIndex;
-    });
   }
-  async updateDisplay() {
-    let remainTime = this.buffer.playbackTime/this.timeScale;
+  clearInterval() {
+    console.log('clearInterval for:', this.updateIntervalIndex);
+    if (this.updateIntervalIndex) clearInterval(this.updateIntervalIndex);
+    delete this.updateIntervalIndex;
+  }
+  async updateDisplay(playbackTime) {
+    // BUG TO FIX: avoid update display calls when lyrics is not mounted (buffer is changed)
+    let remainTime = playbackTime/this.timeScale;
     let startBuffer = 3.3/this.timeScale;
     let endBuffer = 0.3/this.timeScale;
     let lines = [];

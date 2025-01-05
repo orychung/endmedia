@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
+<link rel="stylesheet" type="text/css" href="../../vue/LyricsSystem/0.css" />
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/vue/layout.css" />
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/vue/control.css" />
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jsmediatags@3.8/dist/jsmediatags.min.js"></script>
@@ -17,9 +18,10 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/common/stat.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/canvas.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/modal.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/music.js" charset="utf-8"></script>
+<script type="text/javascript" src="/endfw/client/music.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/shortcuts.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/quick_vue.js"></script>
+<script type="text/javascript" src="/endfw/client/quick_vue.js"></script>
+<script type="text/javascript" src="../../vue/LyricsSystem/0.js"></script>
 <script type="text/javascript" src="../js/MediaFile.js"></script>
 <script type="text/javascript" src="../js/staticModals.js"></script>
 <style id="vue-head">
@@ -189,6 +191,9 @@ g.audio.player = {
     stat.lastPlay = new Date().toISOString();
     if (this.history.length >= 3) this.uploadHistory();
     
+    g.audio.buffer.stop();
+    this.donePlay('stopped');
+    
     (async ()=>{
       delete all.audio.player.imageDataURL;
       let tags = (await mediaFile.mediaTags()).tags;
@@ -197,10 +202,20 @@ g.audio.player = {
         //let url = URL.createObjectURL(blob);
         all.audio.player.imageDataURL = URL.createObjectURL(blob);
       }
+      
+      delete all.audio.player.lyrics;
+      let lyricsJson;
+      try {
+        lyricsJson = JSON.parse(await http.get('/lyrics/KLJ/'+g.files[mediaFile.path].title+'.KLJ'));
+      }
+      catch (e) {};
+      if (lyricsJson) {
+        all.audio.player.lyrics = new LyricsSystem(lyricsJson);
+        LyricsSystem.linkBufferToLyrics(g.audio.buffer, this.lyrics);
+        this.lyrics.reactive = all.audio.player.lyrics;
+      }
     })();
     
-    g.audio.buffer.stop();
-    this.donePlay('stopped');
     await g.audio.buffer.load(mediaFile.data.slice());
     g.audio.buffer.restart(...args);
     
@@ -277,6 +292,7 @@ async function initPage() {
     }
   };
 
+  await Vue.endAddOn.loadTemplateURLs('../../vue/LyricsSystem/0.xml');
   Vue.endAddOn.useBasicMethods();
   await Vue.endAddOn.load();
   window.apps = Vue.endAddOn.createApp({
@@ -451,6 +467,7 @@ async function initData() {
   <div class="absolute" style="top: 10px; right: 10px; width: 40px;">
     <t-icon-button @click="showContextmenu(all.ui.topContext,$event)" :od="{icon:'more_vert'}"></t-icon-button>
   </div>
+  <t-lyrics v-if="all.audio.player.lyrics" :od="all.audio.player.lyrics" class="flex col full-size absolute pinboard"></t-lyrics>
   </screen-layer>
   <t-modal :w="all.ui.modals"></t-modal>
   <t-contextmenu :w="all.ui.contextmenus"></t-contextmenu>

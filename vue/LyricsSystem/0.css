@@ -1,4 +1,11 @@
 
+/*Shortcuts*/
+.lyrics-ruby {
+  display: inline-block;
+  direction: ltr;
+}
+
+/*Tags*/
 span-lyrics {
   * {--base-font-size: 5.5vh;}
   display: block;
@@ -19,3 +26,6 @@ span-lyrics {
     padding: 10vh 10vw;
   }
 }
+
+/*Built-in Tags*/
+ruby > rt {--font-scale: 0.5;}
