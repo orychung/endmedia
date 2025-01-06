@@ -176,6 +176,7 @@ g.audio = {ctx: new AudioContext()};
 g.audio.buffer = new MusicalBuffer(g.audio.ctx);
 g.audio.player = {
   history: [],
+  showLyrics: true,
   donePlay(type) {
     document.title = 'Automate';
     this.currentPlay?.fire(type);
@@ -467,7 +468,10 @@ async function initData() {
   <div class="absolute" style="top: 10px; right: 10px; width: 40px;">
     <t-icon-button @click="showContextmenu(all.ui.topContext,$event)" :od="{icon:'more_vert'}"></t-icon-button>
   </div>
-  <t-lyrics v-if="all.audio.player.lyrics" :od="all.audio.player.lyrics" class="flex col full-size absolute pinboard"></t-lyrics>
+  <t-lyrics v-if="all.audio.player.lyrics" :od="all.audio.player.lyrics"
+    v-show="all.audio.player.showLyrics"
+    class="flex col full-size absolute pinboard pointer-event-none"
+    style="pointer-events: none;"></t-lyrics>
   </screen-layer>
   <t-modal :w="all.ui.modals"></t-modal>
   <t-contextmenu :w="all.ui.contextmenus"></t-contextmenu>

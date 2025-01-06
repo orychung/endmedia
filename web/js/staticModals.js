@@ -26,9 +26,12 @@ g.staticModals = {
   playerConfig: new ModalScreen({
     caption: 'Player Configuration',
     fields: {
+      showLyrics: {name: 'Show Lyrics', type: 'checkbox'},
       volume: {name: 'Volume', type: 'range', min: 0, max: 100},
     },
     od: {
+      get showLyrics() {return all.audio.player.showLyrics;},
+      set showLyrics(value) {return all.audio.player.showLyrics = value;},
       get volume() {return Math.round(all.audio.buffer.gain.gain.value * 100);},
       set volume(value) {return all.audio.buffer.gain.gain.value = value / 100;},
     },
