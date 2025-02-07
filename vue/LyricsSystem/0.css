@@ -7,11 +7,11 @@
 
 /*Tags*/
 span-lyrics {
-  * {--base-font-size: 5.5vh;}
+  * {--base-font-size: 3.7vw;}
   display: block;
   bottom: 0px;
   right: 0px;
-  margin: 10vh 10vw;
+  margin: 9vh 6vw;
   padding: 0px 0px;
   font-weight: 600;
   font-family: "BIZ UDGothic";
@@ -23,9 +23,9 @@ span-lyrics {
     color: var(--lyrics-color);
     text-shadow: .1vw .1vw 0.4vw rgba(0,0,0,1);
     margin: 0px 0px;
-    padding: 10vh 10vw;
+    padding: 9vh 6vw;
   }
 }
 
 /*Built-in Tags*/
-ruby > rt {--font-scale: 0.5;}
+ruby > rt {--font-scale: 0.55;}

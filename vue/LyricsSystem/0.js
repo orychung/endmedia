@@ -57,7 +57,7 @@ class LyricsTrail {
     Object.assign(this,o);
     let virtualIndex = this.index^((this.index^this.lineIndex)&1);
     this.css = {
-      bottom: 10*virtualIndex+'vh',
+      bottom: 7*virtualIndex+'vw',
       right: (virtualIndex&1)?null:'0vw',
       left: (virtualIndex&1)?'0vw':null,
       "--lyrics-color": this.line.color || this.system.defaultColor,
@@ -134,6 +134,10 @@ class LyricsSystem {
       }
       remainTime -= line[0];
     });
+    if (this.trails.length > 2) {
+      if (this.trails[0].line.remainTime >= this.trails[0].line.totalTime) this.trails.shift(1);
+      this.trails = this.trails.slice(0, 2);
+    }
     this.reactive.trails = this.trails;
   }
 }

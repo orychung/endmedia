@@ -179,8 +179,16 @@ g.audio.player = {
   showLyrics: true,
   donePlay(type) {
     document.title = 'Automate';
+    this.currentPlay?.wakeLock?.release();
     this.currentPlay?.fire(type);
     delete all.audio.player.currentPlay;
+  },
+  async wakeLock() {
+    if (document.visibilityState!=='visible') return;
+    if (this.currentPlay?.undergo(x=>x.fired===false)) {
+      this.currentPlay.wakeLock = await navigator.wakeLock.request('screen');
+      //console.log('wakeLock set!', this.currentPlay.wakeLock);
+    };
   },
   async playMediaFile(mediaFile, ...args) {
     await mediaFile.load();
@@ -221,6 +229,7 @@ g.audio.player = {
     g.audio.buffer.restart(...args);
     
     all.audio.player.currentPlay = triggerFactory();
+    this.wakeLock();
     document.title = 'Automate: Playing ' + g.files[mediaFile.path].title;
     this.currentMediaFile = mediaFile;
     await this.currentPlay.promise;
@@ -481,6 +490,9 @@ async function initData() {
 document.body.style.setProperty('--device-pixel-ratio', devicePixelRatio);
 window.addEventListener('resize',e=>{
   document.body.style.setProperty('--device-pixel-ratio', devicePixelRatio);
+});
+window.addEventListener('visibilitychange',e=>{
+  g.audio.player.wakeLock();
 });
 window.onbeforeunload = function(e) {
   console.log(e);
