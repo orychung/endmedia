@@ -26,7 +26,7 @@
 <script type="text/javascript" src="../js/staticModals.js"></script>
 <style id="vue-head">
 :root {
-  --theme-face-hue: {{all.ui.themeFaceHue}}
+  --theme-face-hue: {{ all.ui.themeFaceHue }}
 }
 div.thumbnail {
   align-self: flex-start;
@@ -84,6 +84,7 @@ div.toolbox {
 }
 grid-heading > div {
   margin-right: 10px;
+  display: {{ all.ui.fileGrid.showHeadings?'flex':'none' }};
 }
 grid-layout {
   align-items: center;
@@ -171,17 +172,45 @@ Object.assign(Vue.endAddOn.commonMethods, {
 <script type="text/javascript" id="model">
 g.debug = {
   commonMethods:　Vue.endAddOn.commonMethods,
+  expandLyrics() {
+    let overrides = {
+      lineLimit: 10,
+      startBufferSeconds: 100,
+      endBufferSeconds: 10,
+    };
+    Object.assign(g.audio.player.lyricsOverrides, overrides);
+    g.audio.player.loadLyrics();
+  },
 };
+console.log('For debug purpose, g.audio.player is the player object');
 g.audio = {ctx: new AudioContext()};
 g.audio.buffer = new MusicalBuffer(g.audio.ctx);
 g.audio.player = {
   history: [],
+  lyricsOverrides: {},
   showLyrics: true,
   donePlay(type) {
     document.title = 'Automate';
     this.currentPlay?.wakeLock?.release();
     this.currentPlay?.fire(type);
     delete all.audio.player.currentPlay;
+  },
+  focusPlaying() {
+    let ele = document.querySelector(`grid-row span[title=${JSON.stringify(this.currentMediaFile.path)}]`);
+    ele.scrollIntoView({ behavior: "smooth" });
+  },
+  async loadLyrics() {
+    delete all.audio.player.lyrics;
+    let lyricsJson;
+    try {
+      lyricsJson = JSON.parse(await http.get('/lyrics/KLJ/'+g.files[this.currentMediaFile.path].title+'.KLJ'));
+    }
+    catch (e) {};
+    if (lyricsJson) {
+      all.audio.player.lyrics = new LyricsSystem(Object.assign(lyricsJson, this.lyricsOverrides));
+      LyricsSystem.linkBufferToLyrics(g.audio.buffer, this.lyrics);
+      this.lyrics.reactive = all.audio.player.lyrics;
+    }
   },
   async wakeLock() {
     if (document.visibilityState!=='visible') return;
@@ -199,6 +228,7 @@ g.audio.player = {
     stat.playCount += 1;
     stat.lastPlay = new Date().toISOString();
     if (this.history.length >= 3) this.uploadHistory();
+    this.currentMediaFile = mediaFile;
     
     g.audio.buffer.stop();
     this.donePlay('stopped');
@@ -212,17 +242,7 @@ g.audio.player = {
         all.audio.player.imageDataURL = URL.createObjectURL(blob);
       }
       
-      delete all.audio.player.lyrics;
-      let lyricsJson;
-      try {
-        lyricsJson = JSON.parse(await http.get('/lyrics/KLJ/'+g.files[mediaFile.path].title+'.KLJ'));
-      }
-      catch (e) {};
-      if (lyricsJson) {
-        all.audio.player.lyrics = new LyricsSystem(lyricsJson);
-        LyricsSystem.linkBufferToLyrics(g.audio.buffer, this.lyrics);
-        this.lyrics.reactive = all.audio.player.lyrics;
-      }
+      this.loadLyrics();
     })();
     
     await g.audio.buffer.load(mediaFile.data.slice());
@@ -231,7 +251,6 @@ g.audio.player = {
     all.audio.player.currentPlay = triggerFactory();
     this.wakeLock();
     document.title = 'Automate: Playing ' + g.files[mediaFile.path].title;
-    this.currentMediaFile = mediaFile;
     await this.currentPlay.promise;
   },
   playNext() {
@@ -302,14 +321,14 @@ async function initPage() {
     }
   };
 
+  await initData();
+  
   await Vue.endAddOn.loadTemplateURLs('../../vue/LyricsSystem/0.xml');
   Vue.endAddOn.useBasicMethods();
   await Vue.endAddOn.load();
   window.apps = Vue.endAddOn.createApp({
     mountSelectors: ['#vue-head','#screen'],
   });
-
-  initData();
 }
 
 async function initData() {
@@ -336,9 +355,10 @@ async function initData() {
       files: files.mapObject(file=>new MediaFile(file, {library: lib})),
     };
   }
-  if (libraryList.length) all.ui.current.library = libraryList[0];
-  all.ui.fileData = all.libraries[all.ui.current.library].files;
-  all.ui.fileGrid = {
+  if (libraryList.length) g.ui.current.library = libraryList[0];
+  g.ui.fileData = g.libraries[g.ui.current.library].files;
+  g.ui.fileGrid = {
+    showHeadings: false,
     filterCond: {},
     filter: {
       title: d=>{
@@ -401,7 +421,7 @@ async function initData() {
     <span class="material-symbols-outlined pointer" :title="od.title">{{ od.icon }}</span>
   </vueTemplate>
   <vueTemplate id="t-media-thumbnail">
-    <div v-if="od.row" style="min-height: 40px;">
+    <div v-if="od.row" style="min-height: 40px;" @click="all.audio.player.focusPlaying()">
       <img v-for="img in [all.thumbnails[od.row.path]].filter(x=>x)"
         :src='img.dataURL' class="thumbnail"></img>
     </div>

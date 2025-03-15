@@ -95,10 +95,10 @@ class LyricsSystem {
           if (!buffer[linkedLyrics]) return;
           buffer[linkedLyrics].reactive.updateDisplay(buffer.playbackTime);
         },20);
-        console.log('setInterval for:', buffer[linkedLyricsInterval]);
+        // console.log('setInterval for:', buffer[linkedLyricsInterval]);
       });
       buffer.addEventListener('stopped', ()=>{
-        console.log('clearInterval for:', buffer[linkedLyricsInterval]);
+        // console.log('clearInterval for:', buffer[linkedLyricsInterval]);
         clearInterval(buffer[linkedLyricsInterval])
       });
     }
@@ -117,8 +117,8 @@ class LyricsSystem {
   async updateDisplay(playbackTime) {
     // BUG TO FIX: avoid update display calls when lyrics is not mounted (buffer is changed)
     let remainTime = playbackTime/this.timeScale;
-    let startBuffer = 3.3/this.timeScale;
-    let endBuffer = 0.3/this.timeScale;
+    let startBuffer = (this.startBufferSeconds??3.3)/this.timeScale;
+    let endBuffer = (this.endBufferSeconds??0.3)/this.timeScale;
     let lines = [];
     this.trails = [];
     this.lines.forEach((line,i)=>{
@@ -134,9 +134,10 @@ class LyricsSystem {
       }
       remainTime -= line[0];
     });
-    if (this.trails.length > 2) {
+    let lineLimit = this.lineLimit ?? 2;
+    if (this.trails.length > lineLimit) {
       if (this.trails[0].line.remainTime >= this.trails[0].line.totalTime) this.trails.shift(1);
-      this.trails = this.trails.slice(0, 2);
+      this.trails = this.trails.slice(0, lineLimit);
     }
     this.reactive.trails = this.trails;
   }
