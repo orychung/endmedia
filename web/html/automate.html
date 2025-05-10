@@ -73,7 +73,7 @@ div.tool {
 div.toolbox {
   min-width: 80px;
   border-radius: 8px;
-  padding: 8px;
+  padding: 6px;
   row-gap: 8px;
   color: var(--theme-back);
   background: hsla(var(--theme-hs),17%,.9);
@@ -151,8 +151,8 @@ async function formNYear(maxYear, minRating) {
     all.ui.fileGrid.data
     .filter(x=>x.q.qAge <= maxYear*4)
     .filter(x=>(x.metadata.rating || 3) >= minRating)
-    .map(x=>'..\\'+x.path).join('\n');
-  return await http.post('/mediaFile/writeFile',{library: Object.keys(all.libraries)[0], path: `[m3u]/${maxYear}-year-${minRating}+star.m3u8`, data});
+    .map(x=>'../'+x.path.split('\\').join('/')).join('\n');
+  return await http.post('/mediaFile/writeFile',{library: Object.keys(all.libraries)[0], path: `[m3u]/${maxYear}-year-${minRating}+star.m3u`, data});
 };
 Object.assign(Vue.endAddOn.commonMethods, {
   testInit: testInit,
@@ -176,13 +176,23 @@ g.debug = {
     let overrides = {
       lineLimit: 10,
       startBufferSeconds: 100,
-      endBufferSeconds: 10,
+      endBufferSeconds: 5,
     };
     Object.assign(g.audio.player.lyricsOverrides, overrides);
     g.audio.player.loadLyrics();
   },
+  startTuner() {
+    document.body.onclick = e=>{
+      g.debug.tunerTicks.push(g.audio.buffer.playbackTime);
+    }
+  },
+  tunerTicks: [],
 };
-console.log('For debug purpose, g.audio.player is the player object');
+console.log([
+  'To tune lyric time',
+  'g.debug.startTuner();',
+  'g.debug.expandLyrics(); g.audio.buffer.restart(0,90);',
+].join('\n'));
 g.audio = {ctx: new AudioContext()};
 g.audio.buffer = new MusicalBuffer(g.audio.ctx);
 g.audio.player = {
@@ -194,6 +204,8 @@ g.audio.player = {
     this.currentPlay?.wakeLock?.release();
     this.currentPlay?.fire(type);
     delete all.audio.player.currentPlay;
+    delete all.audio.player.currentMediaFile;
+    this.registerMediaSession();
   },
   focusPlaying() {
     let ele = document.querySelector(`grid-row span[title=${JSON.stringify(this.currentMediaFile.path)}]`);
@@ -212,6 +224,57 @@ g.audio.player = {
       this.lyrics.reactive = all.audio.player.lyrics;
     }
   },
+  async registerMediaSession(file) {
+    try {
+      if (navigator.mediaSession === undefined) return;
+      if (file === undefined) {
+        delete navigator.mediaSession.metadata;
+        navigator.mediaSession.playbackState = 'none';
+        return;
+      }
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: file.title,
+        artist: file.performer,
+        album: file.album,
+        artwork: [
+          { src: g.thumbnails[file.path].dataURL, sizes: '80x80', type: 'image/png' },
+        ]
+      });
+      navigator.mediaSession.playbackState = 'playing';
+
+      // Define media session actions
+      navigator.mediaSession.setActionHandler('play', () => {
+        if (!this.currentPlay) {
+          this.play();
+          console.log('Play action triggered');
+        }
+      });
+
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (this.currentPlay) {
+          this.pause();
+          console.log('Pause action triggered');
+        }
+      });
+
+      navigator.mediaSession.setActionHandler('stop', () => {
+        this.stop();
+        console.log('Stop action triggered');
+      });
+
+      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+        const skipTime = details.seekOffset || 10; // Default skip time is 10 seconds
+        this.playbackTime = Math.max(g.audio.buffer.playbackTime - skipTime, 0);
+        console.log(`Seek backward ${skipTime} seconds`);
+      });
+
+      navigator.mediaSession.setActionHandler('seekforward', (details) => {
+        const skipTime = details.seekOffset || 10; // Default skip time is 10 seconds
+        this.playbackTime = Math.min(g.audio.buffer.playbackTime + skipTime, g.audio.buffer.duration);
+        console.log(`Seek forward ${skipTime} seconds`);
+      });
+    } catch (e) {console.error(e);}
+  },
   async wakeLock() {
     if (document.visibilityState!=='visible') return;
     if (this.currentPlay?.undergo(x=>x.fired===false)) {
@@ -228,19 +291,20 @@ g.audio.player = {
     stat.playCount += 1;
     stat.lastPlay = new Date().toISOString();
     if (this.history.length >= 3) this.uploadHistory();
-    this.currentMediaFile = mediaFile;
     
-    g.audio.buffer.stop();
-    this.donePlay('stopped');
+    this.stop();
+    this.currentMediaFile = mediaFile;
     
     (async ()=>{
       delete all.audio.player.imageDataURL;
       let tags = (await mediaFile.mediaTags()).tags;
+      let imgBlob;
       if (tags.picture) {
-        let blob = new Blob([new Uint8Array(tags.picture.data)],{type: tags.picture.format});
-        //let url = URL.createObjectURL(blob);
-        all.audio.player.imageDataURL = URL.createObjectURL(blob);
+        imgBlob = new Blob([new Uint8Array(tags.picture.data)],{type: tags.picture.format});
+        all.audio.player.imageDataURL = URL.createObjectURL(imgBlob);
       }
+      
+      this.registerMediaSession(g.files[mediaFile.path]);
       
       this.loadLyrics();
     })();
@@ -270,9 +334,24 @@ g.audio.player = {
     g.debug.weights = weights;
     g.ui.fileData[weights.sample()].start();
   },
+  play() {
+    if (this.pausePlaybackTime) {
+      g.audio.buffer.restart(0, this.pausePlaybackTime);
+      delete this.pausePlaybackTime;
+      navigator.mediaSession.playbackState = 'playing';
+    } else {
+      this.playNext();
+    }
+  },
+  pause() {
+    this.pausePlaybackTime = g.audio.buffer.playbackTime;
+    g.audio.buffer.stop();
+    navigator.mediaSession.playbackState = 'paused';
+  },
   stop() {
     g.audio.buffer.stop();
-    this.uploadHistory();
+    this.donePlay('stopped');
+    delete this.pausePlaybackTime;
   },
   uploadHistory() {
     http.post('/metadata/stats', {
@@ -282,6 +361,11 @@ g.audio.player = {
       ),
     });
     this.history = [];
+  },
+  set playbackTime(value) {
+    if (!this.currentPlay) return;
+    if (this.pausePlaybackTime !== undefined) return this.pausePlaybackTime = value;
+    g.audio.buffer.restart(0, value);
   },
 };
 g.audio.buffer.addEventListener('ended', e=>{
@@ -482,7 +566,11 @@ async function initData() {
     <div class="flex col toolbox">
       <t-media-thumbnail :all="all" :od="{row:all.audio.player.currentMediaFile}"></t-media-thumbnail>
       <div class="flex row">
-        <t-icon-button @click="all.audio.player.stop()" :od="{title:'Stop Player',icon:'stop_circle'}"></t-icon-button>
+        <t-icon-button @click="all.audio.player.stop()" :od="{title:'Stop',icon:'stop'}"></t-icon-button>
+        <t-icon-button v-show="all.audio.player.currentPlay && !all.audio.player.pausePlaybackTime"
+          @click="all.audio.player.pause()" :od="{title:'Pause',icon:'pause'}"></t-icon-button>
+        <t-icon-button v-show="all.audio.player.currentPlay && all.audio.player.pausePlaybackTime"
+          @click="all.audio.player.play()" :od="{title:'Play',icon:'play_arrow'}"></t-icon-button>
         <t-icon-button @click="all.audio.player.playNext()" :od="{title:'Play Next',icon:'skip_next'}"></t-icon-button>
         <t-icon-button v-show="false" @click="changeLibrary" :od="{title:'Change Library',icon:'dictionary'}"></t-icon-button>
       </div>
