@@ -225,6 +225,7 @@ g.audio.player = {
     }
   },
   refreshMediaSession(options) {
+    // TODO: move this to a right await to avoid random success and timing issue
     setTimeout(async e=>{
       navigator.mediaSession.playbackState = options.playbackState;
       if (options.playbackState == 'none') return;
@@ -259,7 +260,6 @@ g.audio.player = {
     navigator.mediaSession.setActionHandler('play', e=>this.play());
     navigator.mediaSession.setActionHandler('stop', e=>this.stop());
     navigator.mediaSession.setActionHandler('nexttrack', e=>this.playNext());
-
     navigator.mediaSession.setActionHandler('seekto', e=>{
       this.playbackTime = e.seekTime;
       this.refreshMediaSession({playbackState:'playing'});
@@ -298,9 +298,9 @@ g.audio.player = {
         imgBlob = new Blob([new Uint8Array(tags.picture.data)],{type: tags.picture.format});
         all.audio.player.imageDataURL = URL.createObjectURL(imgBlob);
       }
+      this.registerMediaSession(g.files[mediaFile.path], imgBlob && await browse.file.dataURL(imgBlob));
       this.loadLyrics();
     })();
-    all.audio.player.registerMediaSession(g.files[mediaFile.path], imgBlob && await browse.file.dataURL(imgBlob));
     
     all.audio.player.currentPlay = triggerFactory();
     this.wakeLock();
