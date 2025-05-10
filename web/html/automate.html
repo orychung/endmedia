@@ -73,7 +73,7 @@ div.tool {
 div.toolbox {
   min-width: 80px;
   border-radius: 8px;
-  padding: 6px;
+  padding: 8px;
   row-gap: 8px;
   color: var(--theme-back);
   background: hsla(var(--theme-hs),17%,.9);
@@ -224,56 +224,48 @@ g.audio.player = {
       this.lyrics.reactive = all.audio.player.lyrics;
     }
   },
-  async registerMediaSession(file) {
-    try {
-      if (navigator.mediaSession === undefined) return;
-      if (file === undefined) {
-        delete navigator.mediaSession.metadata;
-        navigator.mediaSession.playbackState = 'none';
-        return;
-      }
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: file.title,
-        artist: file.performer,
-        album: file.album,
-        artwork: [
-          { src: g.thumbnails[file.path].dataURL, sizes: '80x80', type: 'image/png' },
-        ]
+  refreshMediaSession(options) {
+    setTimeout(async e=>{
+      navigator.mediaSession.playbackState = options.playbackState;
+      if (options.playbackState == 'none') return;
+      navigator.mediaSession.setPositionState({
+        playbackRate: options.playbackRate ?? 1,
+        position: options.position ?? g.audio.buffer.playbackTime,
+        duration: options.duration ?? g.audio.buffer.audioData.duration,
       });
-      navigator.mediaSession.playbackState = 'playing';
+    }, 500);
+  },
+  registerMediaSession(file, thumbnailURL) {
+    if (navigator.mediaSession === undefined) return;
+    if (file === undefined) {
+      delete navigator.mediaSession.metadata;
+      this.refreshMediaSession({playbackState:'none'});
+      return;
+    }
+    
+    // Set mediaSession metadata
+    let artwork = [];
+    if (g.thumbnails[file.path]) artwork.push({ src: g.thumbnails[file.path].dataURL, sizes: '80x80', type: 'image/jpeg' });
+    if (thumbnailURL) artwork.push({ src: thumbnailURL, sizes: '300x300', type: 'image/jpeg' });
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: file.title,
+      artist: file.performer,
+      album: file.album,
+      artwork: artwork,
+    });
+    
+    // Define media session actions
+    navigator.mediaSession.setActionHandler('pause', e=>this.pause());
+    navigator.mediaSession.setActionHandler('play', e=>this.play());
+    navigator.mediaSession.setActionHandler('stop', e=>this.stop());
+    navigator.mediaSession.setActionHandler('nexttrack', e=>this.playNext());
 
-      // Define media session actions
-      navigator.mediaSession.setActionHandler('play', () => {
-        if (!this.currentPlay) {
-          this.play();
-          console.log('Play action triggered');
-        }
-      });
-
-      navigator.mediaSession.setActionHandler('pause', () => {
-        if (this.currentPlay) {
-          this.pause();
-          console.log('Pause action triggered');
-        }
-      });
-
-      navigator.mediaSession.setActionHandler('stop', () => {
-        this.stop();
-        console.log('Stop action triggered');
-      });
-
-      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-        const skipTime = details.seekOffset || 10; // Default skip time is 10 seconds
-        this.playbackTime = Math.max(g.audio.buffer.playbackTime - skipTime, 0);
-        console.log(`Seek backward ${skipTime} seconds`);
-      });
-
-      navigator.mediaSession.setActionHandler('seekforward', (details) => {
-        const skipTime = details.seekOffset || 10; // Default skip time is 10 seconds
-        this.playbackTime = Math.min(g.audio.buffer.playbackTime + skipTime, g.audio.buffer.duration);
-        console.log(`Seek forward ${skipTime} seconds`);
-      });
-    } catch (e) {console.error(e);}
+    navigator.mediaSession.setActionHandler('seekto', e=>{
+      this.playbackTime = e.seekTime;
+      this.refreshMediaSession({playbackState:'playing'});
+    });
+    
+    this.refreshMediaSession({playbackState:'playing'});
   },
   async wakeLock() {
     if (document.visibilityState!=='visible') return;
@@ -295,22 +287,20 @@ g.audio.player = {
     this.stop();
     this.currentMediaFile = mediaFile;
     
+    await g.audio.buffer.load(mediaFile.data.slice());
+    g.audio.buffer.restart(...args);
+    
+    let imgBlob;
     (async ()=>{
       delete all.audio.player.imageDataURL;
       let tags = (await mediaFile.mediaTags()).tags;
-      let imgBlob;
       if (tags.picture) {
         imgBlob = new Blob([new Uint8Array(tags.picture.data)],{type: tags.picture.format});
         all.audio.player.imageDataURL = URL.createObjectURL(imgBlob);
       }
-      
-      this.registerMediaSession(g.files[mediaFile.path]);
-      
       this.loadLyrics();
     })();
-    
-    await g.audio.buffer.load(mediaFile.data.slice());
-    g.audio.buffer.restart(...args);
+    all.audio.player.registerMediaSession(g.files[mediaFile.path], imgBlob && await browse.file.dataURL(imgBlob));
     
     all.audio.player.currentPlay = triggerFactory();
     this.wakeLock();
@@ -337,16 +327,20 @@ g.audio.player = {
   play() {
     if (this.pausePlaybackTime) {
       g.audio.buffer.restart(0, this.pausePlaybackTime);
-      delete this.pausePlaybackTime;
-      navigator.mediaSession.playbackState = 'playing';
+      delete all.audio.player.pausePlaybackTime;
+      this.refreshMediaSession({playbackState:'playing'});
     } else {
       this.playNext();
     }
   },
   pause() {
-    this.pausePlaybackTime = g.audio.buffer.playbackTime;
+    all.audio.player.pausePlaybackTime = g.audio.buffer.playbackTime;
+    this.refreshMediaSession({
+      playbackState:'paused',
+      position: g.audio.player.pausePlaybackTime,
+      duration: g.audio.buffer.audioData.duration,
+    });
     g.audio.buffer.stop();
-    navigator.mediaSession.playbackState = 'paused';
   },
   stop() {
     g.audio.buffer.stop();
@@ -365,7 +359,7 @@ g.audio.player = {
   set playbackTime(value) {
     if (!this.currentPlay) return;
     if (this.pausePlaybackTime !== undefined) return this.pausePlaybackTime = value;
-    g.audio.buffer.restart(0, value);
+    all.audio.buffer.restart(0, value);
   },
 };
 g.audio.buffer.addEventListener('ended', e=>{
@@ -566,7 +560,7 @@ async function initData() {
     <div class="flex col toolbox">
       <t-media-thumbnail :all="all" :od="{row:all.audio.player.currentMediaFile}"></t-media-thumbnail>
       <div class="flex row">
-        <t-icon-button @click="all.audio.player.stop()" :od="{title:'Stop',icon:'stop'}"></t-icon-button>
+        <!-- <t-icon-button @click="all.audio.player.stop()" :od="{title:'Stop',icon:'stop'}"></t-icon-button> -->
         <t-icon-button v-show="all.audio.player.currentPlay && !all.audio.player.pausePlaybackTime"
           @click="all.audio.player.pause()" :od="{title:'Pause',icon:'pause'}"></t-icon-button>
         <t-icon-button v-show="all.audio.player.currentPlay && all.audio.player.pausePlaybackTime"
