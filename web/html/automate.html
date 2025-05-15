@@ -91,6 +91,12 @@ grid-layout {
   align-items: center;
   overflow: hidden;
 }
+grid-row {
+  --base-font-size: 12px;
+  span.title {
+    --base-font-size: 14px;
+  }
+}
 grid-row:hover > :first-child::before {
   content: "";
   display: block;
@@ -297,6 +303,7 @@ async function initData() {
       { heading: 'Actions', template: 't-media-actions', 'class': 'action' },
       { heading: 'Title', template: 't-media-title' },
       { heading: 'Performer', display: d=>all.files[d.path]?.performer, 'class': 'performer' },
+      { heading: 'Time', display: d=>d.metadata.length && new Date(d.metadata.length*1000).toISOString().slice(14, 19) },
     ],
     get data() {
       return all.ui.fileData.mapArray().sortBy(x=>x.q.name, true);

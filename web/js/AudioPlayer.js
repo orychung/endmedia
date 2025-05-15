@@ -93,6 +93,9 @@ class AudioPlayer {
     this.currentMediaFile = mediaFile;
     
     await g.audio.buffer.load(mediaFile.data.slice());
+    if (!('length' in mediaFile.metadata)) {
+      mediaFile.setMetadata('length', g.audio.buffer.audioData.duration);
+    }
     g.audio.buffer.restart(...args);
     
     let imgBlob;
