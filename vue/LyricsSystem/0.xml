@@ -1,0 +1,31 @@
+<vueTemplates>
+<vueTemplate id="t-lyrics">
+  <div class="flex col full-size absolute pinboard">
+    <t-lyrics-trail v-for="(trail,i) in od.trails" :od="trail"></t-lyrics-trail>
+  </div>
+</vueTemplate>
+<vueTemplate id="t-lyrics-trail">
+  <div class="no-text" :style="od.css" v-node-ref="[od,'line','vnode']">
+    <span-lyrics ref="full" class="done">
+      <t-lyrics-ruby :w="od.ruby.rubyList"></t-lyrics-ruby>
+    </span-lyrics>
+    <span-lyrics ref="widthFrom" class="absolute" style="top: 200vh;">
+      <t-lyrics-ruby :w="od.ruby.rubyList.slice(od.ruby.currentRubyIndex)"></t-lyrics-ruby>
+    </span-lyrics>
+    <span-lyrics ref="widthTo" class="absolute" style="top: 200vh;">
+      <t-lyrics-ruby :w="od.ruby.rubyList.slice(od.ruby.currentRubyIndex+1)"></t-lyrics-ruby>
+    </span-lyrics>
+    <span-lyrics ref="remain" class="absolute" :style="{width: od.remainWidth}">
+      <t-lyrics-ruby :w="od.ruby.rubyList"></t-lyrics-ruby>
+    </span-lyrics>
+  </div>
+</vueTemplate>
+<vueTemplate id="t-lyrics-ruby">
+  <div class="lyrics-ruby no-text">
+    <template v-for="ruby in w">
+      <ruby v-if="ruby instanceof Array">{{ruby[0]}}<rp>(</rp><rt>{{ruby.slice(1).filter((x,i)=>i&1).join('')}}</rt><rp>)</rp></ruby>
+      <span v-else>{{ruby}}</span>
+    </template>
+  </div>
+</vueTemplate>
+</vueTemplates>

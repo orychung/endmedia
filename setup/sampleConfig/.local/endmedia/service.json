@@ -9,6 +9,9 @@
   },
   "data": {
     "path": "<root path of data, e.g. C:/Users/ABC/AppData/Roaming/endmedia>",
+    "repos": {
+      "lyrics": {"path":"<root path of lyrics, e.g. C:/Users/ABC/AppData/Roaming/endmedia/lyrics>"}
+    },
     "libraryPaths": [
       "<path of a media library, e.g. C:/Users/ABC/Music>"
     ]

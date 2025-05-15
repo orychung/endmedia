@@ -3,6 +3,7 @@
   "authFree": {
     "versionedResourceMap": {
       "web/html.js": [0, "/web/html.js", "default"],
+      "vue": [0, "/vue", "default"],
       "endfw": [0, "/../endfw", "default"]
     },
     "resourceMap": {

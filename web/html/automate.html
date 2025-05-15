@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
+<link rel="stylesheet" type="text/css" href="../../vue/LyricsSystem/0.css" />
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/vue/layout.css" />
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/vue/control.css" />
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jsmediatags@3.8/dist/jsmediatags.min.js"></script>
@@ -17,14 +18,16 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/common/stat.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/canvas.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/modal.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/music.js" charset="utf-8"></script>
+<script type="text/javascript" src="/endfw/client/music.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/shortcuts.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/quick_vue.js"></script>
+<script type="text/javascript" src="/endfw/client/quick_vue.js"></script>
+<script type="text/javascript" src="../../vue/LyricsSystem/0.js"></script>
+<script type="text/javascript" src="../js/AudioPlayer.js"></script>
 <script type="text/javascript" src="../js/MediaFile.js"></script>
 <script type="text/javascript" src="../js/staticModals.js"></script>
 <style id="vue-head">
 :root {
-  --theme-face-hue: {{all.ui.themeFaceHue}}
+  --theme-face-hue: {{ all.ui.themeFaceHue }}
 }
 div.thumbnail {
   align-self: flex-start;
@@ -82,10 +85,17 @@ div.toolbox {
 }
 grid-heading > div {
   margin-right: 10px;
+  display: {{ all.ui.fileGrid.showHeadings?'flex':'none' }};
 }
 grid-layout {
   align-items: center;
   overflow: hidden;
+}
+grid-row {
+  --base-font-size: 12px;
+  span.title {
+    --base-font-size: 14px;
+  }
 }
 grid-row:hover > :first-child::before {
   content: "";
@@ -148,8 +158,8 @@ async function formNYear(maxYear, minRating) {
     all.ui.fileGrid.data
     .filter(x=>x.q.qAge <= maxYear*4)
     .filter(x=>(x.metadata.rating || 3) >= minRating)
-    .map(x=>'..\\'+x.path).join('\n');
-  return await http.post('/mediaFile/writeFile',{library: Object.keys(all.libraries)[0], path: `[m3u]/${maxYear}-year-${minRating}+star.m3u8`, data});
+    .map(x=>'../'+x.path.split('\\').join('/')).join('\n');
+  return await http.post('/mediaFile/writeFile',{library: Object.keys(all.libraries)[0], path: `[m3u]/${maxYear}-year-${minRating}+star.m3u`, data});
 };
 Object.assign(Vue.endAddOn.commonMethods, {
   testInit: testInit,
@@ -169,77 +179,30 @@ Object.assign(Vue.endAddOn.commonMethods, {
 <script type="text/javascript" id="model">
 g.debug = {
   commonMethods:　Vue.endAddOn.commonMethods,
+  expandLyrics() {
+    let overrides = {
+      lineLimit: 10,
+      startBufferSeconds: 100,
+      endBufferSeconds: 5,
+    };
+    Object.assign(g.audio.player.lyricsOverrides, overrides);
+    g.audio.player.loadLyrics();
+  },
+  startTuner() {
+    document.body.onclick = e=>{
+      g.debug.tunerTicks.push(g.audio.buffer.playbackTime);
+    }
+  },
+  tunerTicks: [],
 };
+console.log([
+  'To tune lyric time',
+  'g.debug.startTuner();',
+  'g.debug.expandLyrics(); g.audio.buffer.restart(0,90);',
+].join('\n'));
 g.audio = {ctx: new AudioContext()};
 g.audio.buffer = new MusicalBuffer(g.audio.ctx);
-g.audio.player = {
-  history: [],
-  donePlay(type) {
-    document.title = 'Automate';
-    this.currentPlay?.fire(type);
-    delete all.audio.player.currentPlay;
-  },
-  async playMediaFile(mediaFile, ...args) {
-    await mediaFile.load();
-    
-    this.history.push(mediaFile.path);
-    const stat = g.stats.touch(mediaFile.path, { path: mediaFile.path, playCount: 0 });
-    if (typeof stat.playCount == 'string') stat.playCount = parseInt(stat.playCount);
-    stat.playCount += 1;
-    stat.lastPlay = new Date().toISOString();
-    if (this.history.length >= 3) this.uploadHistory();
-    
-    (async ()=>{
-      delete all.audio.player.imageDataURL;
-      let tags = (await mediaFile.mediaTags()).tags;
-      if (tags.picture) {
-        let blob = new Blob([new Uint8Array(tags.picture.data)],{type: tags.picture.format});
-        //let url = URL.createObjectURL(blob);
-        all.audio.player.imageDataURL = URL.createObjectURL(blob);
-      }
-    })();
-    
-    g.audio.buffer.stop();
-    this.donePlay('stopped');
-    await g.audio.buffer.load(mediaFile.data.slice());
-    g.audio.buffer.restart(...args);
-    
-    all.audio.player.currentPlay = triggerFactory();
-    document.title = 'Automate: Playing ' + g.files[mediaFile.path].title;
-    this.currentMediaFile = mediaFile;
-    await this.currentPlay.promise;
-  },
-  playNext() {
-    const now = new Date().getTime();
-    let weights = g.ui.fileData.mapObject(x=>{
-      let weight = 1;
-      let daysNotPlayed = (now - new Date(x.stats?.lastPlay ?? '1970-01-01').getTime())/86400000;
-      let oldFactor = Math.max(3, x.q.qAge ?? 2) / 4;
-      weight *= 1.6 ** (x.metadata?.rating ?? 3);
-      weight *= 0.9 ** oldFactor;
-      weight *= Math.min(8 / oldFactor ** .5, daysNotPlayed + 1);
-      weight *= Math.min(1, daysNotPlayed * 2) ** 3;
-      weight *= Math.min(1, daysNotPlayed * 8) ** 2;
-      return weight;
-    });
-    weights = new pmf(weights);
-    g.debug.weights = weights;
-    g.ui.fileData[weights.sample()].start();
-  },
-  stop() {
-    g.audio.buffer.stop();
-    this.uploadHistory();
-  },
-  uploadHistory() {
-    http.post('/metadata/stats', {
-      dataset: this.history.mapKeyValue(
-        (k,v)=>v,
-        (v,k)=>g.stats[v]
-      ),
-    });
-    this.history = [];
-  },
-};
+g.audio.player = new AudioPlayer();
 g.audio.buffer.addEventListener('ended', e=>{
   if (!g.audio.buffer.buffer) return;
   g.audio.player.donePlay('ended');
@@ -277,13 +240,14 @@ async function initPage() {
     }
   };
 
+  await initData();
+  
+  await Vue.endAddOn.loadTemplateURLs('../../vue/LyricsSystem/0.xml');
   Vue.endAddOn.useBasicMethods();
   await Vue.endAddOn.load();
   window.apps = Vue.endAddOn.createApp({
     mountSelectors: ['#vue-head','#screen'],
   });
-
-  initData();
 }
 
 async function initData() {
@@ -310,9 +274,10 @@ async function initData() {
       files: files.mapObject(file=>new MediaFile(file, {library: lib})),
     };
   }
-  if (libraryList.length) all.ui.current.library = libraryList[0];
-  all.ui.fileData = all.libraries[all.ui.current.library].files;
-  all.ui.fileGrid = {
+  if (libraryList.length) g.ui.current.library = libraryList[0];
+  g.ui.fileData = g.libraries[g.ui.current.library].files;
+  g.ui.fileGrid = {
+    showHeadings: false,
     filterCond: {},
     filter: {
       title: d=>{
@@ -338,6 +303,7 @@ async function initData() {
       { heading: 'Actions', template: 't-media-actions', 'class': 'action' },
       { heading: 'Title', template: 't-media-title' },
       { heading: 'Performer', display: d=>all.files[d.path]?.performer, 'class': 'performer' },
+      { heading: 'Time', display: d=>d.metadata.length && new Date(d.metadata.length*1000).toISOString().slice(14, 19) },
     ],
     get data() {
       return all.ui.fileData.mapArray().sortBy(x=>x.q.name, true);
@@ -375,7 +341,7 @@ async function initData() {
     <span class="material-symbols-outlined pointer" :title="od.title">{{ od.icon }}</span>
   </vueTemplate>
   <vueTemplate id="t-media-thumbnail">
-    <div v-if="od.row" style="min-height: 40px;">
+    <div v-if="od.row" style="min-height: 40px;" @click="all.audio.player.focusPlaying()">
       <img v-for="img in [all.thumbnails[od.row.path]].filter(x=>x)"
         :src='img.dataURL' class="thumbnail"></img>
     </div>
@@ -436,7 +402,11 @@ async function initData() {
     <div class="flex col toolbox">
       <t-media-thumbnail :all="all" :od="{row:all.audio.player.currentMediaFile}"></t-media-thumbnail>
       <div class="flex row">
-        <t-icon-button @click="all.audio.player.stop()" :od="{title:'Stop Player',icon:'stop_circle'}"></t-icon-button>
+        <!-- <t-icon-button @click="all.audio.player.stop()" :od="{title:'Stop',icon:'stop'}"></t-icon-button> -->
+        <t-icon-button v-show="all.audio.player.currentPlay && !all.audio.player.pausePlaybackTime"
+          @click="all.audio.player.pause()" :od="{title:'Pause',icon:'pause'}"></t-icon-button>
+        <t-icon-button v-show="all.audio.player.currentPlay && all.audio.player.pausePlaybackTime"
+          @click="all.audio.player.play()" :od="{title:'Play',icon:'play_arrow'}"></t-icon-button>
         <t-icon-button @click="all.audio.player.playNext()" :od="{title:'Play Next',icon:'skip_next'}"></t-icon-button>
         <t-icon-button v-show="false" @click="changeLibrary" :od="{title:'Change Library',icon:'dictionary'}"></t-icon-button>
       </div>
@@ -451,6 +421,10 @@ async function initData() {
   <div class="absolute" style="top: 10px; right: 10px; width: 40px;">
     <t-icon-button @click="showContextmenu(all.ui.topContext,$event)" :od="{icon:'more_vert'}"></t-icon-button>
   </div>
+  <t-lyrics v-if="all.audio.player.lyrics" :od="all.audio.player.lyrics"
+    v-show="all.audio.player.showLyrics"
+    class="flex col full-size absolute pinboard pointer-event-none"
+    style="pointer-events: none;"></t-lyrics>
   </screen-layer>
   <t-modal :w="all.ui.modals"></t-modal>
   <t-contextmenu :w="all.ui.contextmenus"></t-contextmenu>
@@ -460,6 +434,9 @@ async function initData() {
 document.body.style.setProperty('--device-pixel-ratio', devicePixelRatio);
 window.addEventListener('resize',e=>{
   document.body.style.setProperty('--device-pixel-ratio', devicePixelRatio);
+});
+window.addEventListener('visibilitychange',e=>{
+  g.audio.player.wakeLock();
 });
 window.onbeforeunload = function(e) {
   console.log(e);
