@@ -89,14 +89,13 @@ class LyricsSystem {
   static linkedLyricsInterval = Symbol('linkedLyricsInterval')
   static linkBufferToLyrics(buffer, lyrics) {
     const {linkedLyrics, linkedLyricsInterval} = LyricsSystem;
+    if (buffer[linkedLyricsInterval]) clearInterval(buffer[linkedLyricsInterval]);
+    buffer[linkedLyricsInterval] = setInterval(()=>{
+      if (!buffer[linkedLyrics]) return;
+      if (!buffer.playbackTime) return;
+      buffer[linkedLyrics].reactive.updateDisplay(buffer.playbackTime);
+    },20);
     if (!buffer[linkedLyrics]) {
-      buffer.addEventListener('started', ()=>{
-        buffer[linkedLyricsInterval] = setInterval(()=>{
-          if (!buffer[linkedLyrics]) return;
-          buffer[linkedLyrics].reactive.updateDisplay(buffer.playbackTime);
-        },20);
-        // console.log('setInterval for:', buffer[linkedLyricsInterval]);
-      });
       buffer.addEventListener('stopped', ()=>{
         // console.log('clearInterval for:', buffer[linkedLyricsInterval]);
         clearInterval(buffer[linkedLyricsInterval])
