@@ -16,6 +16,8 @@
       "https://cdn.jsdelivr.net/gh/orychung/"],
     "scriptSrc": [
       "'self'", "'unsafe-inline'", "'unsafe-eval'",
+      "https://unpkg.com/soundtouchjs@0.2.0/",
+      "https://unpkg.com/@soundtouchjs/audio-worklet@0.2.0/",
       "https://cdn.jsdelivr.net/npm/jsmediatags@3.8/",
       "https://cdn.jsdelivr.net/gh/orychung/",
       "https://www.gstatic.com"],

@@ -1,6 +1,7 @@
 "use strict";
 
 class AudioPlayer {
+  _keyShift = 0
   history = []
   lyricsOverrides = {}
   showLyrics = true
@@ -168,5 +169,12 @@ class AudioPlayer {
     if (!this.currentPlay) return;
     if (this.pausePlaybackTime !== undefined) return this.pausePlaybackTime = value;
     all.audio.buffer.restart(0, value);
+  }
+  get keyShift() {
+    return this._keyShift;
+  }
+  set keyShift(value) {
+    g.audio.soundtouchNode.parameters.get('pitch').exponentialRampToValueAtTime(2**(value/12), g.audio.ctx.currentTime+0.005);
+    return this._keyShift = value;
   }
 };

@@ -8,23 +8,24 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
 <link rel="stylesheet" type="text/css" href="../../vue/LyricsSystem/0.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/vue/layout.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/vue/control.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/vue/layout.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/vue/control.css" />
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jsmediatags@3.8/dist/jsmediatags.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/lib/vue.global.prod.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/common/builtin.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/common/global.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/common/promise.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/common/stat.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/canvas.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/modal.js"></script>
-<script type="text/javascript" src="/endfw/client/music.js" charset="utf-8"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.7.6/client/shortcuts.js"></script>
-<script type="text/javascript" src="/endfw/client/quick_vue.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/lib/vue.global.prod.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/common/builtin.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/common/global.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/common/promise.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/common/stat.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/canvas.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/modal.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/music.js" charset="utf-8"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/shortcuts.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/quick_vue.js"></script>
 <script type="text/javascript" src="../../vue/LyricsSystem/0.js"></script>
 <script type="text/javascript" src="../js/AudioPlayer.js"></script>
 <script type="text/javascript" src="../js/MediaFile.js"></script>
 <script type="text/javascript" src="../js/staticModals.js"></script>
+<script type="module" src="../js/method.js"></script>
 <style id="vue-head">
 :root {
   --theme-face-hue: {{ all.ui.themeFaceHue }}
@@ -200,14 +201,6 @@ console.log([
   'g.debug.startTuner();',
   'g.debug.expandLyrics(); g.audio.buffer.restart(0,90);',
 ].join('\n'));
-g.audio = {ctx: new AudioContext()};
-g.audio.buffer = new MusicalBuffer(g.audio.ctx);
-g.audio.player = new AudioPlayer();
-g.audio.buffer.addEventListener('ended', e=>{
-  if (!g.audio.buffer.buffer) return;
-  g.audio.player.donePlay('ended');
-  g.audio.player.playNext();
-});
 
 g.loadedQueue = Array(0);
 g.loadedQueue.push = function push(file) {
