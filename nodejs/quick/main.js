@@ -20,7 +20,6 @@ globalThis.loadDynamic = function loadDynamic() {
   if (ingestAPI) endmedia.mediaRoute.use(ingestAPI, 'ingest');
   if (automateAPI) endmedia.mediaRoute.all('/automate/*', automateAPI, 'automate');
   if (metadataAPI) endmedia.mediaRoute.all('/metadata/*', metadataAPI, 'metadata');
-  endfw.lessCss.clearCache();
 }
 
 let endmedia = require('endmedia');
@@ -49,10 +48,6 @@ mainRoute.use(endfw.ingest.ingestRequest.parsedUrl_p(g.server));
 mainRoute.use(endfw.ingest.logRequest.ip_method_url);
 mainRoute.use(endfw.ingest.authFree.cache_path_inventory(g.assetConfig.authFree));
 mainRoute.use(endmedia.mediaRoute, 'mediaRoute');
-mainRoute.all('/web/css/*', endfw.lessCss({
-  contextPath: '/web/css',
-  pathFromReq: req=>req.parsedUrl.remainingPath(),
-}));
 mainRoute.use(function webFiles(req, res, next) {
   if (req.method=='POST') g.server.log(JSON.stringify(req.body)); // activate this line for debug only
   

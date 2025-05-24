@@ -1,0 +1,111 @@
+div.thumbnail {
+  align-self: flex-start;
+}
+div.action {
+  margin-right: 10px;
+}
+div.filter-bar {
+  --base-font-size: 12px;
+  > div {
+    background: var(--theme-fore);
+    color: var(--theme-back);
+    margin: 2px;
+    border-radius: 8px;
+    padding: 3px;
+    align-items: center;
+    > label {
+      > span {font-size: 18px;}
+      > input {
+        margin-left: 3px;
+        background: var(--theme-back);
+      }
+    }
+    > span {font-size: 16px;}
+  }
+}
+div.performer {
+  font-size: 12px;
+  max-width: 200px;
+  overflow: hidden;
+}
+div.pop {
+  padding: 5px;
+  background: hsl(var(--theme-glow-hsl),.8);
+}
+div.tool {
+  flex-shrink: 0;
+  padding: 2px;
+}
+div.toolbox {
+  min-width: 80px;
+  border-radius: 8px;
+  padding: 8px;
+  row-gap: 8px;
+  color: var(--theme-pop-fore);
+  background: var(--theme-pop-back);
+  align-items: center;
+  img {
+    border-radius: 8px;
+  }
+}
+grid-heading > div {
+  margin-right: 10px;
+  display: var(--heading-display);
+}
+grid-layout {
+  align-items: center;
+  overflow: hidden;
+}
+grid-row {
+  --base-font-size: 12px;
+  span.title {
+    --base-font-size: 14px;
+  }
+}
+grid-row:hover > :first-child::before {
+  content: "";
+  display: block;
+  height: 80px;
+  width: 100vw;
+  position: absolute;
+  left: 0px; right: 0px;
+  /* background: linear-gradient(to bottom, #EEE, transparent); */
+  background: conic-gradient(
+    from 0deg at 0% 50px,
+    transparent 0deg,
+    rgb(240 240 240 / 0.4) 20deg,
+    rgb(240 240 240 / 0.9) 50deg,
+    rgb(240 240 240 / 0.5) 80deg,
+    transparent 90deg);
+  z-index: -10;
+}
+img.thumbnail {
+  max-height: calc(80px / var(--device-pixel-ratio));
+  width: calc(80px / var(--device-pixel-ratio));
+  object-fit: scale-down;
+}
+screen-layer.player-image > .flex {
+  position: absolute;
+  right: 0px;
+  bottom: 0px;
+  > img {
+    max-height: 100vh;
+    max-width: 100vw;
+    opacity: 0.5;
+  }
+}
+.metadata-quarter {
+  --color: hsla(var(--hue), 50%, 50%, 0.9);
+  border: 2px solid var(--color);
+  border-radius: 8px;
+  padding: 2px 4px;
+  line-height: 1em;
+  color: var(--color);
+  font-weight: 700;
+  font-size: 80%;
+}
+.title-metadata {
+  align-items: flex-end;
+  margin-left: -4px;
+  user-select: none;
+}
