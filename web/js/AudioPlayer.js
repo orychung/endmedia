@@ -101,14 +101,23 @@ class AudioPlayer {
     g.audio.buffer.restart(...args);
     
     let imgBlob;
+    let imgDataURL;
     (async ()=>{
-      delete all.audio.player.imageDataURL;
+      delete all.audio.player.imageBlobURL;
       let tags = (await mediaFile.mediaTags()).tags;
       if (tags.picture) {
         imgBlob = new Blob([new Uint8Array(tags.picture.data)],{type: tags.picture.format});
-        all.audio.player.imageDataURL = URL.createObjectURL(imgBlob);
+        all.audio.player.imageBlobURL = URL.createObjectURL(imgBlob);
+        
+        // resample image to 300x300:
+        const canvas = document.createElement('canvas');
+        await canvas.loadFile(all.audio.player.imageBlobURL, {
+          maxHeight: 300,
+          maxWidth: 300,
+        });
+        imgDataURL = canvas.toDataURL('image/jpeg', 0.9);
       }
-      this.registerMediaSession(g.files[mediaFile.path], imgBlob && await browse.file.dataURL(imgBlob));
+      this.registerMediaSession(g.files[mediaFile.path], imgBlob && imgDataURL);
       this.loadLyrics();
     })();
     

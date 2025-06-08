@@ -274,7 +274,7 @@ async function initData() {
 <div id="screen" class="flex">
   <screen-layer class="player-image full-size" style="--base-z-index:-20;">
     <div class="flex row" v-if="all.audio.player.currentPlay">
-      <img v-for="opac in [0.25,0.4,0.6]" :style="{opacity:opac}" :src="all.audio.player.imageDataURL"></img>
+      <img v-for="opac in [0.25,0.4,0.6]" :style="{opacity:opac}" :src="all.audio.player.imageBlobURL"></img>
     </div>
   </screen-layer>
   <screen-layer class="flex row flex-stretch full-size">
