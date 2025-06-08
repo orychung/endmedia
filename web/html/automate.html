@@ -16,10 +16,10 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/common/builtin.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/common/global.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/common/promise.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/common/stat.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.1/common/stat.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/canvas.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/modal.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/music.js" charset="utf-8"></script>
+<script type="text/javascript" src="../../../endfw/client/music.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/shortcuts.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/quick_vue.js"></script>
 <script type="text/javascript" src="../../vue/LyricsSystem/0.js"></script>
@@ -183,7 +183,7 @@ async function initData() {
       { heading: 'Actions', template: 't-media-actions', 'class': 'action' },
       { heading: 'Title', template: 't-media-title' },
       { heading: 'Performer', display: d=>all.files[d.path]?.performer, 'class': 'performer' },
-      { heading: 'Time', display: d=>d.metadata.length && new Date(d.metadata.length*1000).toISOString().slice(14, 19) },
+      { heading: 'Time', display: d=>d.metadata?.length && new Date(d.metadata.length*1000).toISOString().slice(14, 19) },
     ],
     get data() {
       return all.ui.fileData.mapArray().sortBy(x=>x.q.name, true);
@@ -274,7 +274,7 @@ async function initData() {
 <div id="screen" class="flex">
   <screen-layer class="player-image full-size" style="--base-z-index:-20;">
     <div class="flex row" v-if="all.audio.player.currentPlay">
-      <img v-for="opac in [0.25,0.375,0.5]" :style="{opacity:opac}" :src="all.audio.player.imageDataURL"></img>
+      <img v-for="opac in [0.25,0.4,0.6]" :style="{opacity:opac}" :src="all.audio.player.imageDataURL"></img>
     </div>
   </screen-layer>
   <screen-layer class="flex row flex-stretch full-size">
@@ -283,9 +283,9 @@ async function initData() {
       <t-media-thumbnail :all="all" :od="{row:all.audio.player.currentMediaFile}"></t-media-thumbnail>
       <div class="flex row">
         <!-- <t-icon-button @click="all.audio.player.stop()" :od="{title:'Stop',icon:'stop'}"></t-icon-button> -->
-        <t-icon-button v-show="all.audio.player.currentPlay && !all.audio.player.pausePlaybackTime"
+        <t-icon-button v-show="all.audio.player.currentPlay && !all.audio.player.paused"
           @click="all.audio.player.pause()" :od="{title:'Pause',icon:'pause'}"></t-icon-button>
-        <t-icon-button v-show="all.audio.player.currentPlay && all.audio.player.pausePlaybackTime"
+        <t-icon-button v-show="all.audio.player.currentPlay && all.audio.player.paused"
           @click="all.audio.player.play()" :od="{title:'Play',icon:'play_arrow'}"></t-icon-button>
         <t-icon-button @click="all.audio.player.playNext()" :od="{title:'Play Next',icon:'skip_next'}"></t-icon-button>
         <t-icon-button v-show="false" @click="changeLibrary" :od="{title:'Change Library',icon:'dictionary'}"></t-icon-button>

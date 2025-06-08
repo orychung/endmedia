@@ -91,16 +91,10 @@ class LyricsSystem {
     const {linkedLyrics, linkedLyricsInterval} = LyricsSystem;
     if (buffer[linkedLyricsInterval]) clearInterval(buffer[linkedLyricsInterval]);
     buffer[linkedLyricsInterval] = setInterval(()=>{
-      if (!buffer[linkedLyrics]) return;
-      if (!buffer.playbackTime) return;
+      if (!buffer[linkedLyrics]) return console.warn('linkedLyrics falsy');
+      if (!buffer.playbackTime) return console.warn('playbackTime falsy');
       buffer[linkedLyrics].reactive.updateDisplay(buffer.playbackTime);
     },20);
-    if (!buffer[linkedLyrics]) {
-      buffer.addEventListener('stopped', ()=>{
-        // console.log('clearInterval for:', buffer[linkedLyricsInterval]);
-        clearInterval(buffer[linkedLyricsInterval])
-      });
-    }
     buffer[linkedLyrics] = lyrics;
   }
   trails = []
