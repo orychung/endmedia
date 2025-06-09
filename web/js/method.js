@@ -1,6 +1,6 @@
 import { SoundTouch, PitchShifter } from 'https://unpkg.com/soundtouchjs@0.2.0/dist/soundtouch.js';
 
-g.audio = {ctx: new AudioContext()};
+g.audio = {ctx: new AudioContext({sampleRate: 96000})};
 g.audio.player = new AudioPlayer();
 
 // Register AudioWorkletProcessor
