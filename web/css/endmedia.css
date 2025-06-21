@@ -10,6 +10,8 @@
   --theme-hs: 0,0%;
   --theme-fore: hsl(var(--theme-hs),20%);
   --theme-back: hsl(var(--theme-hs),85%);
+  --theme-pop-fore: var(--theme-back);
+  --theme-pop-back: hsla(var(--theme-hs),17%,.9);
   --theme-glow-hsl: 0,0%,100%;
   --theme-glow: hsl(var(--theme-glow-hsl));
 }
@@ -17,6 +19,7 @@
   :root {
     --theme-fore: #DDD;
     --theme-back: #333;
+    --theme-pop-back: hsla(var(--theme-hs),77%,.6);
     --theme-glow-hsl: 0,0%,0%;
   }
 }

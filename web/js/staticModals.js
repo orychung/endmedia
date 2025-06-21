@@ -29,6 +29,7 @@ g.staticModals = {
       showHeadings: {name: 'Show Grid Headings', type: 'checkbox'},
       showLyrics: {name: 'Show Lyrics', type: 'checkbox'},
       volume: {name: 'Volume', type: 'range', min: 0, max: 100},
+      keyShift: {name: 'Key Shift', type: 'range', min: -12, max: 12},
     },
     od: {
       get showHeadings() {return all.ui.fileGrid.showHeadings;},
@@ -37,6 +38,8 @@ g.staticModals = {
       set showLyrics(value) {return all.audio.player.showLyrics = value;},
       get volume() {return Math.round(all.audio.buffer.gain.gain.value * 100);},
       set volume(value) {return all.audio.buffer.gain.gain.value = value / 100;},
+      get keyShift() {return all.audio.player.keyShift;},
+      set keyShift(value) {return all.audio.player.keyShift = value;},
     },
     actions: [
       ModalScreen.ACTION.CLOSE,
