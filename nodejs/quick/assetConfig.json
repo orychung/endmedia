@@ -19,6 +19,8 @@
       "https://unpkg.com/soundtouchjs@0.2.0/",
       "https://unpkg.com/@soundtouchjs/audio-worklet@0.2.0/",
       "https://cdn.jsdelivr.net/npm/jsmediatags@3.8/",
+      "https://cdn.jsdelivr.net/npm/chart.js@4.5.0/",
+      "https://cdn.jsdelivr.net/npm/@kurkle/color@0.3.4/",
       "https://cdn.jsdelivr.net/gh/orychung/",
       "https://www.gstatic.com"],
     "styleSrc": [

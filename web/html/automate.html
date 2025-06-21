@@ -19,7 +19,7 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.1/common/stat.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/canvas.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/modal.js"></script>
-<script type="text/javascript" src="../../../endfw/client/music.js" charset="utf-8"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.2/client/music.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/shortcuts.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/quick_vue.js"></script>
 <script type="text/javascript" src="../../vue/LyricsSystem/0.js"></script>
@@ -85,8 +85,8 @@ g.debug = {
 };
 console.log([
   'To tune lyric time',
-  'g.debug.startTuner();',
-  'g.debug.expandLyrics(); g.audio.buffer.restart(0,90);',
+  'if (g.audio.player.paused) g.audio.player.play();',
+  'g.debug.startTuner(); g.debug.expandLyrics(); g.audio.buffer.restart(0,90);',
 ].join('\n'));
 
 g.loadedQueue = Array(0);
