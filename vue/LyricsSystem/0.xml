@@ -7,6 +7,7 @@
 <vueTemplate id="t-lyrics-trail">
   <div class="no-text" :style="od.css" v-node-ref="[od,'line','vnode']">
     <span-lyrics ref="full" class="done">
+      <t-lyrics-ruby :w="od.ruby.rubyList" class="shadow absolute"></t-lyrics-ruby>
       <t-lyrics-ruby :w="od.ruby.rubyList"></t-lyrics-ruby>
     </span-lyrics>
     <span-lyrics ref="widthFrom" class="absolute" style="top: 200vh;">
