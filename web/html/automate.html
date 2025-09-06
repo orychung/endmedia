@@ -9,19 +9,19 @@
 <link rel="stylesheet" type="text/css" href="../css/endmedia.css" />
 <link rel="stylesheet" type="text/css" href="../css/automate.css" />
 <link rel="stylesheet" type="text/css" href="../../vue/LyricsSystem/0.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/vue/layout.css" />
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/vue/control.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.3/vue/layout.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.3/vue/control.css" />
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jsmediatags@3.8/dist/jsmediatags.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/lib/vue.global.prod.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/common/builtin.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/common/global.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/common/promise.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.1/common/stat.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/canvas.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/modal.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.2/client/music.js" charset="utf-8"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/shortcuts.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.0/client/quick_vue.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.3/lib/vue.global.prod.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.3/common/builtin.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.3/common/global.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.3/common/promise.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.3/common/stat.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.3/client/canvas.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.3/client/modal.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.3/client/music.js" charset="utf-8"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.3/client/shortcuts.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.3/client/quick_vue.js"></script>
 <script type="text/javascript" src="../../vue/LyricsSystem/0.js"></script>
 <script type="text/javascript" src="../js/AudioPlayer.js"></script>
 <script type="text/javascript" src="../js/MediaFile.js"></script>
@@ -116,6 +116,7 @@ async function initPage() {
         {text: 'Generate m3u', click: ()=>formNYear([1,2,3,6,10],[3,4,5,6])},
         {text: 'Set Filter', click: ()=>g.staticModals.gridFilter.show()},
         {text: 'Player Configuration', click: ()=>g.staticModals.playerConfig.show()},
+        {text: 'Reload Lyrics', click: ()=>g.audio.player.loadLyrics()},
       ],
     }
   };
@@ -179,10 +180,10 @@ async function initData() {
     },
     sorting: {},
     columns: [
-      { heading: '🖼', template: 't-media-thumbnail', 'class': 'thumbnail' },
-      { heading: 'Actions', template: 't-media-actions', 'class': 'action' },
+      { heading: '🖼', template: 't-media-thumbnail', id: 'thumbnail' },
+      { heading: 'Actions', template: 't-media-actions', id: 'actions' },
       { heading: 'Title', template: 't-media-title' },
-      { heading: 'Performer', display: d=>all.files[d.path]?.performer, 'class': 'performer' },
+      { heading: 'Performer', display: d=>all.files[d.path]?.performer, id: 'performer' },
       { heading: 'Time', display: d=>d.metadata?.length && new Date(d.metadata.length*1000).toISOString().slice(14, 19) },
     ],
     get data() {
@@ -311,8 +312,7 @@ async function initData() {
   <t-modal :w="all.ui.modals"></t-modal>
   <t-contextmenu :w="all.ui.contextmenus"></t-contextmenu>
 </div>
-</body>
-<script type="text/javascript" id="script-after-body">
+<script type="text/javascript" id="afterscript">
 document.body.style.setProperty('--device-pixel-ratio', devicePixelRatio);
 window.addEventListener('resize',e=>{
   document.body.style.setProperty('--device-pixel-ratio', devicePixelRatio);
@@ -325,4 +325,5 @@ window.onbeforeunload = function(e) {
   g.audio.player.uploadHistory();
 };
 </script>
+</body>
 </html>

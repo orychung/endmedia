@@ -1,9 +1,3 @@
-div.thumbnail {
-  align-self: flex-start;
-}
-div.action {
-  margin-right: 10px;
-}
 div.filter-bar {
   --base-font-size: 12px;
   > div {
@@ -22,11 +16,6 @@ div.filter-bar {
     }
     > span {font-size: 16px;}
   }
-}
-div.performer {
-  font-size: 12px;
-  max-width: 200px;
-  overflow: hidden;
 }
 div.pop {
   padding: 5px;
@@ -58,6 +47,20 @@ grid-layout {
 }
 grid-row {
   --base-font-size: 12px;
+  > div#thumbnail {
+    align-self: flex-start;
+  }
+  > div#actions {
+    margin-right: 10px;
+  }
+  > div#performer {
+    font-size: 12px;
+    max-width: 200px;
+    overflow: hidden;
+  }
+  div {
+    text-shadow: 1px 1px 3px var(--theme-glow);
+  }
   span.title {
     --base-font-size: 14px;
   }
@@ -102,6 +105,7 @@ screen-layer.player-image > .flex {
   color: var(--color);
   font-weight: 700;
   font-size: 80%;
+  text-shadow: none;
 }
 .title-metadata {
   align-items: flex-end;
