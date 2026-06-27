@@ -28,7 +28,7 @@ div.tool {
 div.toolbox {
   min-width: 80px;
   border-radius: 8px;
-  padding: 8px;
+  padding: 12px 8px;
   row-gap: 8px;
   color: var(--theme-pop-fore);
   background: var(--theme-pop-back);
@@ -48,6 +48,7 @@ grid-layout {
 grid-row {
   --base-font-size: 12px;
   > div#thumbnail {
+    scroll-margin-top: 14px;
     align-self: flex-start;
   }
   > div#actions {

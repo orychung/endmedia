@@ -91,7 +91,7 @@ console.log([
 
 g.loadedQueue = Array(0);
 g.loadedQueue.push = function push(file) {
-  const KEEP_SIZE = 3;
+  const KEEP_SIZE = 1;
   let foundIndex = this.indexOf(file);
   if (foundIndex > -1) this.splice(foundIndex,1);
   Array.prototype.push.call(this, file);
