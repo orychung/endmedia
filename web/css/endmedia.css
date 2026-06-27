@@ -78,7 +78,7 @@ label {
 }
 span.title {
   font-weight: 700;
-  text-shadow: 1px 1px 3px var(--theme-glow);
+  text-shadow: 0.5px 0.5px 2px var(--theme-glow);
 }
 span.white {
   color: #FFF;

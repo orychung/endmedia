@@ -14,8 +14,10 @@ class AudioPlayer {
     this.registerMediaSession();
   }
   focusPlaying() {
-    let ele = document.querySelector(`grid-row span[title=${JSON.stringify(this.currentMediaFile.path)}]`);
-    ele.scrollIntoView({ behavior: "smooth" });
+    let ele = document.querySelector(`grid-row span[title=${JSON.stringify(this.currentMediaFile.path)}]`)
+      .parentNode.parentNode.parentNode.children;
+    g.debug.lastFocus = ele;
+    ele.thumbnail.scrollIntoView({ behavior: "smooth" });
   }
   async loadLyrics() {
     delete all.audio.player.lyrics;

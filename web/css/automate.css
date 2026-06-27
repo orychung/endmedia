@@ -1,9 +1,3 @@
-div.thumbnail {
-  align-self: flex-start;
-}
-div.action {
-  margin-right: 10px;
-}
 div.filter-bar {
   --base-font-size: 12px;
   > div {
@@ -23,11 +17,6 @@ div.filter-bar {
     > span {font-size: 16px;}
   }
 }
-div.performer {
-  font-size: 12px;
-  max-width: 200px;
-  overflow: hidden;
-}
 div.pop {
   padding: 5px;
   background: hsl(var(--theme-glow-hsl),.8);
@@ -39,7 +28,7 @@ div.tool {
 div.toolbox {
   min-width: 80px;
   border-radius: 8px;
-  padding: 8px;
+  padding: 12px 8px;
   row-gap: 8px;
   color: var(--theme-pop-fore);
   background: var(--theme-pop-back);
@@ -58,6 +47,21 @@ grid-layout {
 }
 grid-row {
   --base-font-size: 12px;
+  > div#thumbnail {
+    scroll-margin-top: 14px;
+    align-self: flex-start;
+  }
+  > div#actions {
+    margin-right: 10px;
+  }
+  > div#performer {
+    font-size: 12px;
+    max-width: 200px;
+    overflow: hidden;
+  }
+  div {
+    text-shadow: 1px 1px 3px var(--theme-glow);
+  }
   span.title {
     --base-font-size: 14px;
   }
@@ -88,10 +92,9 @@ screen-layer.player-image > .flex {
   position: absolute;
   right: 0px;
   bottom: 0px;
-  > img {
+  img {
     max-height: 100vh;
     max-width: 100vw;
-    opacity: 0.5;
   }
 }
 .metadata-quarter {
@@ -103,9 +106,34 @@ screen-layer.player-image > .flex {
   color: var(--color);
   font-weight: 700;
   font-size: 80%;
+  text-shadow: none;
 }
 .title-metadata {
   align-items: flex-end;
   margin-left: -4px;
   user-select: none;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+.thin-scroll::-webkit-scrollbar {
+  width: 12px; /* Visual width of scrollbar */
+}
+
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent; /* Track background */
+}
+
+.thin-scroll::-webkit-scrollbar-thumb {
+  min-height: 45px;
+  background: rgba(0, 0, 0, 0.1); /* Scrollbar thumb color with low opacity */
+  border-radius: 6px; /* Rounded corners */
+  border: 2px solid transparent; /* Creates offset effect */
+  background-clip: content-box; /* Ensures border doesn't affect thumb color */
+  transition: opacity 0.2s ease; /* Smooth opacity transition */
+}
+
+.thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.7); /* Higher opacity on hover */
+  border: 2px solid transparent; /* Creates offset effect */
+  background-clip: content-box; /* Ensures border doesn't affect thumb color */
 }

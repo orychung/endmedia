@@ -5,7 +5,8 @@
   },
   "https": {
     "keyPath": "../.local/ssl/key.pem",
-    "certPath": "../.local/ssl/cert.pem"
+    "certPath": "../.local/ssl/cert.pem",
+    "passphrase": "changeit"
   },
   "data": {
     "path": "<root path of data, e.g. C:/Users/ABC/AppData/Roaming/endmedia>",

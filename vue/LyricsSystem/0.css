@@ -20,10 +20,19 @@ span-lyrics {
   white-space: nowrap;
   direction: rtl;
   &.done {
-    color: var(--lyrics-color);
-    text-shadow: .1vw .1vw 0.4vw rgba(0,0,0,1);
     margin: 0px 0px;
     padding: 9vh 6vw;
+    
+    /* text-shadow: .1vw .1vw 0.4vw rgba(0,0,0,1); */
+    > .shadow {
+      text-shadow: .1vw .1vw 0.4vw rgba(0,0,0,1);
+    }
+    /* color: var(--lyrics-color); */
+    * {
+      background: var(--lyrics-color);
+      background-clip: text;
+      color: transparent;
+    }
   }
 }
 
