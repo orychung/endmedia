@@ -1,6 +1,8 @@
 "use strict";
 
-let endfw = require('endfw'); //g is defined here
+/* check globalThis to use debug endfw
+   endfw defines g */
+let endfw = globalThis.endfw || require('endfw');
 let mediaRoute = new endfw.subroute();
 let metadata = require('./library/metadata');
 let automate = require('./library/automate');
