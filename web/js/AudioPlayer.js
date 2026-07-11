@@ -1,16 +1,24 @@
 "use strict";
 
 class AudioPlayer {
+  _gain = 30
   _keyShift = 0
+  _playbackRate = 1
   history = []
   lyricsOverrides = {}
   showLyrics = true
+  constructor(data) {
+    this.buffer = data.buffer;
+    this.soundtouchNode = data.soundtouchNode;
+    
+    this.reactive = this; // must reassign this to Vue proxy version for reactivity
+  }
   donePlay(type) {
     document.title = 'Automate';
     this.currentPlay?.wakeLock?.release();
     this.currentPlay?.fire(type);
-    delete all.audio.player.currentPlay;
-    delete all.audio.player.currentMediaFile;
+    delete this.reactive.currentPlay;
+    delete this.reactive.currentMediaFile;
     this.registerMediaSession();
   }
   focusPlaying() {
@@ -20,26 +28,26 @@ class AudioPlayer {
     ele.thumbnail.scrollIntoView({ behavior: "smooth" });
   }
   async loadLyrics() {
-    delete all.audio.player.lyrics;
+    delete this.reactive.lyrics;
     let lyricsJson;
     try {
       lyricsJson = JSON.parse(await http.get('/lyrics/KLJ/'+g.files[this.currentMediaFile.path].title+'.KLJ'));
     }
     catch (e) {};
     if (lyricsJson) {
-      all.audio.player.lyrics = new LyricsSystem(Object.assign(lyricsJson, this.lyricsOverrides));
-      LyricsSystem.linkBufferToLyrics(g.audio.buffer, this.lyrics);
-      this.lyrics.reactive = all.audio.player.lyrics;
+      this.reactive.lyrics = new LyricsSystem(Object.assign(lyricsJson, this.lyricsOverrides));
+      LyricsSystem.linkBufferToLyrics(this.buffer, this.lyrics);
+      this.lyrics.reactive = this.reactive.lyrics;
     }
   }
   refreshMediaSession(options) {
     navigator.mediaSession.playbackState = options.playbackState;
-    all.audio.player.paused = (options.playbackState == 'paused');
+    this.reactive.paused = (options.playbackState == 'paused');
     if (options.playbackState == 'none') return;
     navigator.mediaSession.setPositionState({
-      playbackRate: options.playbackRate ?? 1,
-      position: options.position ?? g.audio.buffer.playbackTime,
-      duration: options.duration ?? g.audio.buffer.audioData.duration,
+      playbackRate: options.playbackRate ?? this._playbackRate,
+      position: options.position ?? this.buffer.playbackTime,
+      duration: options.duration ?? this.buffer.audioData.duration,
     });
   }
   registerMediaSession(file, thumbnailURL) {
@@ -96,24 +104,24 @@ class AudioPlayer {
     this.stop();
     this.currentMediaFile = mediaFile;
     
-    await g.audio.buffer.load(mediaFile.data.slice());
+    await this.buffer.load(mediaFile.data.slice());
     if (!(mediaFile.metadata?.length)) {
-      mediaFile.setMetadata('length', g.audio.buffer.audioData.duration);
+      mediaFile.setMetadata('length', this.buffer.audioData.duration);
     }
-    g.audio.buffer.restart(...args);
+    this.buffer.restart(...args);
     
     let imgBlob;
     let imgDataURL;
     (async ()=>{
-      delete all.audio.player.imageBlobURL;
+      delete this.reactive.imageBlobURL;
       let tags = (await mediaFile.mediaTags()).tags;
       if (tags.picture) {
         imgBlob = new Blob([new Uint8Array(tags.picture.data)],{type: tags.picture.format});
-        all.audio.player.imageBlobURL = URL.createObjectURL(imgBlob);
+        this.reactive.imageBlobURL = URL.createObjectURL(imgBlob);
         
         // resample image to 300x300:
         const canvas = document.createElement('canvas');
-        await canvas.loadFile(all.audio.player.imageBlobURL, {
+        await canvas.loadFile(this.imageBlobURL, {
           maxHeight: 300,
           maxWidth: 300,
         });
@@ -123,7 +131,7 @@ class AudioPlayer {
       this.loadLyrics();
     })();
     
-    all.audio.player.currentPlay = triggerFactory();
+    this.reactive.currentPlay = triggerFactory();
     this.wakeLock();
     document.title = 'Automate: Playing ' + g.files[mediaFile.path].title;
     await this.currentPlay.promise;
@@ -146,8 +154,8 @@ class AudioPlayer {
     g.ui.fileData[weights.sample()].start(undefined, 0);
   }
   play() {
-    if (g.audio.buffer.pausePlaybackTime) {
-      g.audio.buffer.start();
+    if (this.buffer.pausePlaybackTime) {
+      this.buffer.start();
       // TODO: move this to a right await to avoid random success and timing issue
       setTimeout(async e=>{
         this.refreshMediaSession({playbackState:'playing'});
@@ -157,15 +165,15 @@ class AudioPlayer {
     }
   }
   pause() {
-    g.audio.buffer.pause();
+    this.buffer.pause();
     this.refreshMediaSession({
       playbackState:'paused',
-      position: g.audio.buffer.pausePlaybackTime,
-      duration: g.audio.buffer.audioData.duration,
+      position: this.buffer.pausePlaybackTime,
+      duration: this.buffer.audioData.duration,
     });
   }
   stop() {
-    g.audio.buffer.stop();
+    this.buffer.stop();
     this.donePlay('stopped');
   }
   uploadHistory() {
@@ -180,13 +188,30 @@ class AudioPlayer {
   set playbackTime(value) {
     if (!this.currentPlay) return;
     if (this.pausePlaybackTime !== undefined) return this.pausePlaybackTime = value;
-    g.audio.buffer.restart(0, value);
+    this.buffer.restart(0, value);
+  }
+  get gain() {
+    return this._gain;
+  }
+  set gain(value) {
+    this.buffer.gain.setParam('gain', value/100);
+    return this._gain = Math.round(value);
   }
   get keyShift() {
     return this._keyShift;
   }
   set keyShift(value) {
-    g.audio.soundtouchNode.parameters.get('pitch').exponentialRampToValueAtTime(2**(value/12), g.audio.ctx.currentTime+0.005);
-    return this._keyShift = value;
+    this._keyShift = value
+    this.soundtouchNode.setParam('pitch', 2**(this._keyShift/12) / this._playbackRate);
+    return this._keyShift;
+  }
+  get playbackRate() {
+    return this._playbackRate;
+  }
+  set playbackRate(value) {
+    this._playbackRate = value
+    this.buffer.buffer.setParam('playbackRate', this._playbackRate);
+    this.soundtouchNode.setParam('pitch', 2**(this._keyShift/12) / this._playbackRate);
+    return this._playbackRate;
   }
 };
