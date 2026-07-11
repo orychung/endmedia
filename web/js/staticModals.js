@@ -28,18 +28,22 @@ g.staticModals = {
     fields: {
       showHeadings: {name: 'Show Grid Headings', type: 'checkbox'},
       showLyrics: {name: 'Show Lyrics', type: 'checkbox'},
-      volume: {name: 'Volume', type: 'range', min: 0, max: 100},
+      gain: {name: 'Volume', type: 'range', min: 0, max: 100},
       keyShift: {name: 'Key Shift', type: 'range', min: -12, max: 12},
+      playbackRate: {name: 'Playback Rate (WIP)', type: 'range', min: 0.1, max: 5, step: 0.02},
     },
     od: {
       get showHeadings() {return all.ui.fileGrid.showHeadings;},
       set showHeadings(value) {return all.ui.fileGrid.showHeadings = value;},
       get showLyrics() {return all.audio.player.showLyrics;},
       set showLyrics(value) {return all.audio.player.showLyrics = value;},
-      get volume() {return Math.round(all.audio.buffer.gain.gain.value * 100);},
-      set volume(value) {return all.audio.buffer.gain.gain.value = value / 100;},
+      
+      get gain() {return all.audio.player.gain;},
+      set gain(value) {return all.audio.player.gain = value;},
       get keyShift() {return all.audio.player.keyShift;},
       set keyShift(value) {return all.audio.player.keyShift = value;},
+      get playbackRate() {return all.audio.player.playbackRate;},
+      set playbackRate(value) {return all.audio.player.playbackRate = value;},
     },
     actions: [
       ModalScreen.ACTION.CLOSE,

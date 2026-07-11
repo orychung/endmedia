@@ -2,6 +2,7 @@
 //main.js for node.js server start
 const path = require('path');
 globalThis.endfw = require('endfw');
+//globalThis.endfw = require('../../../endfw');
 endfw.builtin.initMore.sql();
 
 const PROJECT = 'endmedia';
@@ -9,6 +10,9 @@ g.rootPath = path.resolve()+'/..';
 g.serviceConfig = require(`${g.rootPath}/.local/${PROJECT}/service.json`);
 g.assetConfig = require(`${g.rootPath}/nodejs/quick/assetConfig.json`);
 g.assetConfig.authFree.versionPattern = new RegExp(g.assetConfig.versionPattern);
+
+let endmedia = require('endmedia');
+//let endmedia = require('../../../endmedia');
 
 const dynamicLib = endfw.dynamic.dynamicLibFor('./quick');
 globalThis.loadDynamic = function loadDynamic() {
@@ -20,9 +24,8 @@ globalThis.loadDynamic = function loadDynamic() {
   if (ingestAPI) endmedia.mediaRoute.use(ingestAPI, 'ingest');
   if (automateAPI) endmedia.mediaRoute.all('/automate/*', automateAPI, 'automate');
   if (metadataAPI) endmedia.mediaRoute.all('/metadata/*', metadataAPI, 'metadata');
+  // see index.js for other details of mediaRoute
 }
-
-let endmedia = require('endmedia');
 
 g.server = new endfw.server.Server({
   project: PROJECT,
@@ -42,7 +45,7 @@ g.server.log = function(message, type=0) {
   console.log(endfw.text.now.format(this.logTypes[type].format) + message);
 };
 
-let mainRoute = new endfw.subroute();
+let mainRoute = new endfw.subroute('mainRoute');
 mainRoute.use(endfw.server.basicParseRoute, 'basicParseRoute');
 mainRoute.use(endfw.ingest.ingestRequest.parsedUrl_p(g.server));
 mainRoute.use(endfw.ingest.logRequest.ip_method_url);
@@ -58,7 +61,9 @@ mainRoute.use(function webFiles(req, res, next) {
     return ret.file([
       'systemRoot',
       g.serviceConfig.data.repos[url.seg(0)].path + decodeURIComponent(url.remainingPath(1))
-    ]);
+    ], {
+      rangeHeader: req.headers.range
+    });
   }
   if (url.seg(0) != 'web') return ret.jsonMsg.methodNotFound();
   if (url.seg(1) == 'html') {
