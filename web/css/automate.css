@@ -110,7 +110,7 @@ screen-layer.player-image > .flex {
   line-height: 1em;
   color: var(--color);
   font-weight: 700;
-  font-size: 80%;
+  --font-scale: 0.8;
   text-shadow: none;
 }
 .title-metadata {

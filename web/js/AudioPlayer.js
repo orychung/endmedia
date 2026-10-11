@@ -136,22 +136,28 @@ class AudioPlayer {
     document.title = 'Automate: Playing ' + g.files[mediaFile.path].title;
     await this.currentPlay.promise;
   }
-  playNext() {
+  nextSongCoefficients = {
+    ageBoostExponential: 0.96,
+    noPlayBoostLinear: 200,
+    noPlayBoostRange: 0.5,
+    ratingBoostExponential: 1.6,
+  }
+  get pmfNextSong() {
     const now = new Date().getTime();
     let weights = g.ui.fileData.mapObject(x=>{
       let weight = 1;
-      let daysNotPlayed = (now - new Date(x.stats?.lastPlay ?? '1970-01-01').getTime())/86400000;
-      let oldFactor = Math.max(3, x.q.qAge ?? 2) / 4;
-      weight *= 1.6 ** (x.metadata?.rating ?? 3);
-      weight *= 0.9 ** oldFactor;
-      weight *= Math.min(8 / oldFactor ** .5, daysNotPlayed + 1);
-      weight *= Math.min(1, daysNotPlayed * 2) ** 3;
-      weight *= Math.min(1, daysNotPlayed * 8) ** 2;
+      let {age, lastPlay, rating} = x.nextSongFactors;
+      let noPlayDays = (now - lastPlay) / 86400000;
+      const C = this.nextSongCoefficients;
+      weight *= C.ageBoostExponential ** age;
+      weight *= 1 + Math.min(1, noPlayDays / C.noPlayBoostRange) * C.noPlayBoostLinear;
+      weight *= C.ratingBoostExponential ** rating;
       return weight;
     });
-    weights = new PMF(weights);
-    g.debug.weights = weights;
-    g.ui.fileData[weights.sample()].start(undefined, 0);
+    return new PMF(weights);
+  }
+  playNext() {
+    g.ui.fileData[this.pmfNextSong.sample()].start(undefined, 0);
   }
   play() {
     if (this.buffer.pausePlaybackTime) {

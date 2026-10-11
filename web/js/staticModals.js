@@ -49,4 +49,26 @@ g.staticModals = {
       ModalScreen.ACTION.CLOSE,
     ],
   }),
+  weightConfig: new ModalScreen({
+    caption: 'Weight Configuration',
+    fields: {
+      ageBoostExponential: {name: 'ageBoostExponential', type: 'range', min: 0.5, max: 1, step: 0.01},
+      noPlayBoostLinear: {name: 'noPlayBoostLinear', type: 'range', min: 0, max: 1000, step: 10},
+      noPlayBoostRange: {name: 'noPlayBoostRange', type: 'range', min: 0.1, max: 30, step: 0.1},
+      ratingBoostExponential: {name: 'ratingBoostExponential', type: 'range', min: 1, max: 5, step: 0.1},
+    },
+    od: {
+      get ageBoostExponential() {return all.audio.player.nextSongCoefficients.ageBoostExponential;},
+      set ageBoostExponential(value) {return all.audio.player.nextSongCoefficients.ageBoostExponential = value;},
+      get noPlayBoostLinear() {return all.audio.player.nextSongCoefficients.noPlayBoostLinear;},
+      set noPlayBoostLinear(value) {return all.audio.player.nextSongCoefficients.noPlayBoostLinear = value;},
+      get noPlayBoostRange() {return all.audio.player.nextSongCoefficients.noPlayBoostRange;},
+      set noPlayBoostRange(value) {return all.audio.player.nextSongCoefficients.noPlayBoostRange = value;},
+      get ratingBoostExponential() {return all.audio.player.nextSongCoefficients.ratingBoostExponential;},
+      set ratingBoostExponential(value) {return all.audio.player.nextSongCoefficients.ratingBoostExponential = value;},
+    },
+    actions: [
+      ModalScreen.ACTION.CLOSE,
+    ],
+  }),
 };

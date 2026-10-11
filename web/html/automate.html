@@ -21,7 +21,7 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.5/client/modal.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.5/client/music.js" charset="utf-8"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.5/client/shortcuts.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.5/client/quick_vue.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/orychung/endfw@0.8.6/client/quick_vue.js"></script>
 <script type="text/javascript" src="../../vue/LyricsSystem/0.js"></script>
 <script type="text/javascript" src="../js/AudioPlayer.js"></script>
 <script type="text/javascript" src="../js/MediaFile.js"></script>
@@ -116,6 +116,7 @@ async function initPage() {
         {text: 'Generate m3u', click: ()=>formNYear([1,2,3,6,10],[3,4,5,6])},
         {text: 'Set Filter', click: ()=>g.staticModals.gridFilter.show()},
         {text: 'Player Configuration', click: ()=>g.staticModals.playerConfig.show()},
+        {text: 'Weight Configuration', click: ()=>g.staticModals.weightConfig.show()},
         {text: 'Reload Lyrics', click: ()=>g.audio.player.loadLyrics()},
       ],
     }
@@ -223,7 +224,7 @@ async function initData() {
     <span class="material-symbols-outlined pointer" :title="od.title">{{ od.icon }}</span>
   </vueTemplate>
   <vueTemplate id="t-media-thumbnail">
-    <div v-if="od.row" style="min-height: 40px;" @click="all.audio.player.focusPlaying()">
+    <div v-if="od.row" class="flex" style="min-height: 40px;" @click="all.audio.player.focusPlaying()">
       <img v-for="img in [all.thumbnails[od.row.path]].filter(x=>x)"
         :src='img.dataURL' class="thumbnail"></img>
     </div>

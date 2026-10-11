@@ -23,11 +23,11 @@
     --theme-glow-hsl: 0,0%,0%;
   }
 }
+.flex {
+  --font-scale: 0;
+}
 
 /*class Shortcuts*/
-.absolute {
-  position: absolute;
-}
 .absolute.pop {
   top: 100%;
   left: 0px;
@@ -62,10 +62,6 @@ button {
   margin: 2px;
   padding: 6px;
   border-radius: 5px;
-}
-div {
-  display: flex;
-  gap: 0px;
 }
 grid-row {
   contain: content;

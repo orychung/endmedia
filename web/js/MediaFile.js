@@ -71,6 +71,13 @@ class MediaFile {
     });
     return c.promise;
   }
+  get nextSongFactors() {
+    return {
+      age: this.q.qAge ?? 2,
+      lastPlay: new Date(this.stats?.lastPlay ?? '1970-01-01').getTime(),
+      rating: this.metadata?.rating ?? 3,
+    };
+  }
   async pop(field, popElement) {
     this.popFocus = field;
     this.preselect = this.metadata?.[field];
